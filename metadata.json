@@ -1,0 +1,5 @@
+{
+  "name": "SeismicSight",
+  "description": "Real-time seismic hazard analysis and aftermath simulation using Gemini Live and Nano Banana 2.",
+  "requestFramePermissions": ["camera", "microphone"]
+}
