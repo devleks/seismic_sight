@@ -59,6 +59,8 @@ export default function App() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const isScanningRef = useRef(false);
+  const nextAudioTimeRef = useRef<number>(0);
+  const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
 
   // --- API Key Handling ---
   useEffect(() => {
@@ -144,9 +146,9 @@ export default function App() {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       
-      const session = await ai.live.connect({
+      const sessionPromise = ai.live.connect({
         model: LIVE_MODEL,
         config: {
           responseModalities: [Modality.AUDIO],
@@ -170,11 +172,16 @@ export default function App() {
         },
         callbacks: {
           onopen: () => {
-            setStatus(AppStatus.ACTIVE);
-            setupAudioStreaming(stream);
-            startVideoStreaming();
+            sessionPromise.then(session => {
+              setStatus(AppStatus.ACTIVE);
+              setupAudioStreaming(stream, session);
+              startVideoStreaming(session);
+            });
           },
           onmessage: async (message) => {
+            if (message.serverContent?.interrupted) {
+              stopAudioPlayback();
+            }
             if (message.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
               playAudioResponse(message.serverContent.modelTurn.parts[0].inlineData.data);
             }
@@ -190,12 +197,14 @@ export default function App() {
                     riskLevel: Math.random() > 0.5 ? 'High' : 'Moderate'
                   };
                   setSeismicData(finalData);
-                  sessionRef.current?.sendToolResponse({
-                    functionResponses: [{
-                      name: "get_seismic_data",
-                      response: { result: finalData },
-                      id: call.id
-                    }]
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "get_seismic_data",
+                        response: { result: finalData },
+                        id: call.id
+                      }]
+                    });
                   });
                 }
               }
@@ -209,14 +218,14 @@ export default function App() {
         }
       });
 
-      sessionRef.current = session;
+      sessionRef.current = await sessionPromise;
     } catch (err) {
       console.error("Connection failed:", err);
       setStatus(AppStatus.ERROR);
     }
   };
 
-  const setupAudioStreaming = (stream: MediaStream) => {
+  const setupAudioStreaming = (stream: MediaStream, session: any) => {
     audioContextRef.current = new AudioContext({ sampleRate: 16000 });
     sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
     
@@ -244,7 +253,7 @@ export default function App() {
         pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
       }
       const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-      sessionRef.current?.sendRealtimeInput({
+      session.sendRealtimeInput({
         media: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
       });
     };
@@ -254,7 +263,7 @@ export default function App() {
     processorRef.current.connect(audioContextRef.current.destination);
   };
 
-  const startVideoStreaming = () => {
+  const startVideoStreaming = (session: any) => {
     const sendFrame = () => {
       if (status !== AppStatus.ACTIVE || isVideoOff) return;
       if (videoRef.current && canvasRef.current) {
@@ -262,7 +271,7 @@ export default function App() {
         if (ctx) {
           ctx.drawImage(videoRef.current, 0, 0, 320, 180);
           const base64Data = canvasRef.current.toDataURL('image/jpeg', 0.5).split(',')[1];
-          sessionRef.current?.sendRealtimeInput({
+          session.sendRealtimeInput({
             media: { data: base64Data, mimeType: 'image/jpeg' }
           });
         }
@@ -286,7 +295,31 @@ export default function App() {
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
-    source.start();
+    
+    const currentTime = audioContextRef.current.currentTime;
+    if (nextAudioTimeRef.current < currentTime) {
+      nextAudioTimeRef.current = currentTime;
+    }
+    
+    source.start(nextAudioTimeRef.current);
+    nextAudioTimeRef.current += buffer.duration;
+    
+    activeSourcesRef.current.push(source);
+    source.onended = () => {
+      activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
+    };
+  };
+
+  const stopAudioPlayback = () => {
+    activeSourcesRef.current.forEach(source => {
+      try {
+        source.stop();
+      } catch (e) {
+        // Ignore errors if already stopped
+      }
+    });
+    activeSourcesRef.current = [];
+    nextAudioTimeRef.current = 0;
   };
 
   // --- Simulation Logic ---
@@ -309,7 +342,7 @@ export default function App() {
           ctx.drawImage(videoRef.current, 0, 0, 1024, 1024);
           const base64Image = canvasRef.current.toDataURL('image/png').split(',')[1];
           
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
           const response = await ai.models.generateContent({
             model: SIM_MODEL,
             contents: {
@@ -362,8 +395,8 @@ export default function App() {
     sounds.playScan();
     
     // Trigger a manual analysis via the live session
-    sessionRef.current?.sendRealtimeInput({
-      text: "Perform a full structural hazard scan of this environment. Identify at least 3 potential risks and their approximate locations in the frame."
+    sessionRef.current?.sendClientContent({
+      turns: "Perform a full structural hazard scan of this environment. Identify at least 3 potential risks and their approximate locations in the frame."
     });
     
     const mockIndicators: HazardIndicator[] = [
@@ -503,6 +536,20 @@ export default function App() {
     const interval = setInterval(pollSeismicData, 60000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopAudioPlayback();
+      if (sessionRef.current) {
+        try {
+          sessionRef.current.close();
+        } catch (e) {}
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
   }, []);
 
   // --- UI Components ---
