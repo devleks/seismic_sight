@@ -15,6 +15,7 @@ The SeismicSight dashboard is divided into several key areas:
 - **Controls (Bottom Center):**
   - **Mic Toggle:** Mute or unmute your microphone for voice commands.
   - **Video Toggle:** Turn your camera feed on or off.
+  - **Disconnect Button:** Click the red power icon to stop the live view and end the session.
   - **Scan Button (Center):** Click the large red button to initiate a structural hazard scan of the current view.
 
 ### 2. Global Seismic Activity (Left Panel)
@@ -44,9 +45,19 @@ This panel is your primary tool for understanding local risks.
 
 ## Predictive Disaster Simulation
 
-*(Note: This feature is triggered automatically under specific high-risk conditions or via specific voice commands when fully integrated.)*
-When activated, SeismicSight will generate a simulated image of your current environment showing the potential aftermath of a seismic event. 
+When activated (via the "Simulate" button or voice command), SeismicSight will generate a simulated image of your current environment showing the potential aftermath of a seismic event. It displays a side-by-side comparison of the original room and the simulated aftermath.
+
 **Always remember:** These images are predictive simulations for preparedness training, not real-time events.
+
+## Voice Commands
+
+Once the live connection is established, you can use the following voice commands:
+
+- **"Scan the room"**: Initiates a structural hazard scan of the current camera view.
+- **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the room after a major earthquake.
+- **"Close simulation"**: Closes the aftermath simulation and returns to the live camera feed.
+- **"Stop live view" / "Disconnect"**: Closes the live connection, turns off the camera and microphone, and returns to the idle state.
+- **Query Earthquakes**: Ask questions like "Where were there earthquakes below magnitude 5 today?" or "Were there any earthquakes above magnitude 7 last week?" to fetch specific data from the USGS API.
 
 ## Emergency Protocols
 
@@ -54,3 +65,7 @@ In the event of an actual earthquake:
 1. **Drop, Cover, and Hold On.**
 2. Do not rely on the app during active shaking.
 3. Follow all local emergency broadcast instructions.
+
+## Versioning
+
+For details on the latest features and updates, please refer to the [CHANGELOG.md](CHANGELOG.md).

@@ -21,17 +21,213 @@ import {
   Box,
   DoorOpen,
   Layers,
-  Maximize
+  Maximize,
+  Plus,
+  Trash2,
+  Crosshair,
+  Globe,
+  Power
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { AppStatus, SeismicData, HazardAnalysis, HazardIndicator } from './types';
-import { fetchLatestSeismicEvent } from './services/seismicService';
+import { fetchLatestSeismicEvent, fetchRecentSeismicEvents, queryEarthquakesApi } from './services/seismicService';
 import { sounds } from './services/soundService';
 
 // --- Constants & Config ---
 const LIVE_MODEL = "gemini-2.5-flash-native-audio-preview-09-2025";
 const SIM_MODEL = "gemini-3.1-flash-image-preview";
+
+const translations: Record<string, Record<string, string>> = {
+  English: {
+    title: "SeismicSight",
+    subtitle: "Emergency Response Unit",
+    cameraOff: "Camera Off",
+    cameraOn: "Camera On",
+    liveAnalysis: "Live Analysis Active",
+    setApiKey: "Set API Key",
+    cameraDisabled: "Camera Feed Disabled",
+    privacyMode: "Privacy Mode Active",
+    enableCamera: "Enable Camera",
+    scanning: "Scanning Environment...",
+    hazardDetail: "Hazard Detail",
+    addHazard: "Add Hazard",
+    structural: "Structural",
+    falling: "Falling Object",
+    glass: "Glass",
+    fire: "Fire/Gas",
+    exit: "Exit Path",
+    hazardLabel: "Hazard Label",
+    details: "Details...",
+    cancel: "Cancel",
+    save: "Save",
+    clear: "Clear",
+    scan: "Scan",
+    annotate: "Annotate",
+    simulate: "Simulate",
+    initSystem: "Initialize System",
+    connectMsg: "Connect to the live seismic analysis network to begin scanning.",
+    establishConn: "Establish Connection",
+    syncing: "Syncing with Satellite...",
+    simAftermath: "Simulated Aftermath",
+    closeSim: "Close Simulation",
+    liveFeed: "Live Hazard Feed",
+    noHazards: "No hazards detected in current sector.",
+    sigActivity: "Significant Activity Board (5.0+)",
+    liveUsgs: "Live USGS",
+    refresh: "Refresh",
+    mag: "MAG",
+    depth: "DEPTH",
+    time: "TIME",
+    status: "STATUS",
+    awaiting: "Awaiting Data...",
+    structIntegrity: "Structural Integrity",
+    safetyRecs: "Safety Recommendations",
+    recentAlerts: "Historical Data",
+    location: "Location"
+  },
+  Spanish: {
+    title: "SeismicSight",
+    subtitle: "Unidad de Respuesta a Emergencias",
+    cameraOff: "Cámara Apagada",
+    cameraOn: "Cámara Encendida",
+    liveAnalysis: "Análisis en Vivo Activo",
+    setApiKey: "Configurar API Key",
+    cameraDisabled: "Cámara Desactivada",
+    privacyMode: "Modo de Privacidad Activo",
+    enableCamera: "Activar Cámara",
+    scanning: "Escaneando Entorno...",
+    hazardDetail: "Detalle del Peligro",
+    addHazard: "Añadir Peligro",
+    structural: "Estructural",
+    falling: "Objeto que Cae",
+    glass: "Vidrio",
+    fire: "Fuego/Gas",
+    exit: "Ruta de Salida",
+    hazardLabel: "Etiqueta del Peligro",
+    details: "Detalles...",
+    cancel: "Cancelar",
+    save: "Guardar",
+    clear: "Limpiar",
+    scan: "Escanear",
+    annotate: "Anotar",
+    simulate: "Simular",
+    initSystem: "Inicializar Sistema",
+    connectMsg: "Conéctese a la red de análisis sísmico en vivo para comenzar a escanear.",
+    establishConn: "Establecer Conexión",
+    syncing: "Sincronizando con Satélite...",
+    simAftermath: "Secuelas Simuladas",
+    closeSim: "Cerrar Simulación",
+    liveFeed: "Feed de Peligros en Vivo",
+    noHazards: "No se detectaron peligros en el sector actual.",
+    sigActivity: "Actividad Significativa (5.0+)",
+    liveUsgs: "USGS en Vivo",
+    refresh: "Actualizar",
+    mag: "MAG",
+    depth: "PROF",
+    time: "HORA",
+    status: "ESTADO",
+    awaiting: "Esperando Datos...",
+    structIntegrity: "Integridad Estructural",
+    safetyRecs: "Recomendaciones de Seguridad",
+    recentAlerts: "Datos Históricos",
+    location: "Ubicación"
+  },
+  French: {
+    title: "SeismicSight",
+    subtitle: "Unité d'Intervention d'Urgence",
+    cameraOff: "Caméra Désactivée",
+    cameraOn: "Caméra Activée",
+    liveAnalysis: "Analyse en Direct Active",
+    setApiKey: "Définir la Clé API",
+    cameraDisabled: "Flux Caméra Désactivé",
+    privacyMode: "Mode Confidentialité Actif",
+    enableCamera: "Activer la Caméra",
+    scanning: "Analyse de l'Environnement...",
+    hazardDetail: "Détail du Danger",
+    addHazard: "Ajouter un Danger",
+    structural: "Structurel",
+    falling: "Objet Tombant",
+    glass: "Verre",
+    fire: "Feu/Gaz",
+    exit: "Voie de Sortie",
+    hazardLabel: "Étiquette du Danger",
+    details: "Détails...",
+    cancel: "Annuler",
+    save: "Enregistrer",
+    clear: "Effacer",
+    scan: "Scanner",
+    annotate: "Annoter",
+    simulate: "Simuler",
+    initSystem: "Initialiser le Système",
+    connectMsg: "Connectez-vous au réseau d'analyse sismique en direct pour commencer.",
+    establishConn: "Établir la Connexion",
+    syncing: "Synchronisation avec le Satellite...",
+    simAftermath: "Conséquences Simulées",
+    closeSim: "Fermer la Simulation",
+    liveFeed: "Flux de Dangers en Direct",
+    noHazards: "Aucun danger détecté dans le secteur actuel.",
+    sigActivity: "Activité Significative (5.0+)",
+    liveUsgs: "USGS en Direct",
+    refresh: "Actualiser",
+    mag: "MAG",
+    depth: "PROF",
+    time: "HEURE",
+    status: "STATUT",
+    awaiting: "En attente de données...",
+    structIntegrity: "Intégrité Structurelle",
+    safetyRecs: "Recommandations de Sécurité",
+    recentAlerts: "Données Historiques",
+    location: "Emplacement"
+  },
+  Kiswahili: {
+    title: "SeismicSight",
+    subtitle: "Kitengo cha Majibu ya Dharura",
+    cameraOff: "Kamera Imezimwa",
+    cameraOn: "Kamera Imewashwa",
+    liveAnalysis: "Uchambuzi wa Moja kwa Moja",
+    setApiKey: "Weka Ufunguo wa API",
+    cameraDisabled: "Kamera Imezimwa",
+    privacyMode: "Hali ya Faragha Imewashwa",
+    enableCamera: "Washa Kamera",
+    scanning: "Inachanganua Mazingira...",
+    hazardDetail: "Maelezo ya Hatari",
+    addHazard: "Ongeza Hatari",
+    structural: "Muundo",
+    falling: "Kitu Kinachoanguka",
+    glass: "Kioo",
+    fire: "Moto/Gesi",
+    exit: "Njia ya Kutokea",
+    hazardLabel: "Lebo ya Hatari",
+    details: "Maelezo...",
+    cancel: "Ghairi",
+    save: "Hifadhi",
+    clear: "Futa",
+    scan: "Changanua",
+    annotate: "Fafanua",
+    simulate: "Iga",
+    initSystem: "Anzisha Mfumo",
+    connectMsg: "Unganisha kwenye mtandao wa uchambuzi wa tetemeko ili kuanza.",
+    establishConn: "Anzisha Muunganisho",
+    syncing: "Inasawazisha na Satelaiti...",
+    simAftermath: "Matokeo Yaliyoigwa",
+    closeSim: "Funga Uigaji",
+    liveFeed: "Matukio ya Hatari",
+    noHazards: "Hakuna hatari zilizogunduliwa.",
+    sigActivity: "Matukio Muhimu (5.0+)",
+    liveUsgs: "USGS Moja kwa Moja",
+    refresh: "Onyesha upya",
+    mag: "UKUBWA",
+    depth: "KINA",
+    time: "MUDA",
+    status: "HALI",
+    awaiting: "Inasubiri Data...",
+    structIntegrity: "Uimara wa Muundo",
+    safetyRecs: "Mapendekezo ya Usalama",
+    recentAlerts: "Data ya Kihistoria",
+    location: "Eneo"
+  }
+};
 
 export default function App() {
   // --- State ---
@@ -39,8 +235,10 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [seismicData, setSeismicData] = useState<SeismicData | null>(null);
+  const [historicalSeismicData, setHistoricalSeismicData] = useState<SeismicData[]>([]);
   const [analysis, setAnalysis] = useState<HazardAnalysis | null>(null);
   const [simulatedImage, setSimulatedImage] = useState<string | null>(null);
+  const [beforeImage, setBeforeImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -48,6 +246,12 @@ export default function App() {
   const [selectedIndicator, setSelectedIndicator] = useState<HazardIndicator | null>(null);
   const [hazardLog, setHazardLog] = useState<HazardIndicator[]>([]);
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.85);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAnnotationMode, setIsAnnotationMode] = useState(false);
+  const [newAnnotationPos, setNewAnnotationPos] = useState<{x: number, y: number} | null>(null);
+  const [annotationForm, setAnnotationForm] = useState({ type: 'structural' as HazardIndicator['type'], label: '', details: '' });
+  const [language, setLanguage] = useState('English');
+  const t = (key: string) => translations[language]?.[key] || translations['English'][key] || key;
 
   // --- Refs ---
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -155,19 +359,56 @@ export default function App() {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: "You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses. Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity.",
+          systemInstruction: `You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses. Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity. You MUST communicate entirely in ${language}. If the user asks you to scan the room or identify hazards, you MUST call the scan_room tool. If the user asks you to simulate an earthquake or show the aftermath, you MUST call the simulate_aftermath tool. If the user asks to close or end the simulation, you MUST call the close_simulation tool. If a user asks for information about other earthquakes (e.g., specific magnitudes, times, or locations), you MUST use the query_earthquakes tool to fetch data from the USGS API. You can only provide answers for information on earthquakes from the API. If the user asks for the largest earthquake, use the query_earthquakes tool with orderBy set to 'magnitude'. If the user asks which region had the most earthquakes, use the query_earthquakes tool with a large limit (e.g., 100) and analyze the locations in the result. If the user asks to stop the live view or disconnect, you MUST call the stop_live_view tool.`,
           tools: [{
-            functionDeclarations: [{
-              name: "get_seismic_data",
-              description: "Retrieves real-time seismic activity data for the current location.",
-              parameters: {
-                type: Type.OBJECT,
-                properties: {
-                  location: { type: Type.STRING, description: "The city or region to check." }
-                },
-                required: ["location"]
+            functionDeclarations: [
+              {
+                name: "get_seismic_data",
+                description: "Retrieves real-time seismic activity data for the current location.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    location: { type: Type.STRING, description: "The city or region to check." }
+                  },
+                  required: ["location"]
+                }
+              },
+              {
+                name: "query_earthquakes",
+                description: "Queries the USGS Earthquake API for historical or recent earthquake data. Use this to find the largest earthquakes (orderBy: 'magnitude') or fetch a list of earthquakes to analyze regions/continents.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    minMagnitude: { type: Type.NUMBER, description: "Minimum magnitude" },
+                    maxMagnitude: { type: Type.NUMBER, description: "Maximum magnitude" },
+                    startTime: { type: Type.STRING, description: "Start time in ISO format (e.g., 2023-01-01)" },
+                    endTime: { type: Type.STRING, description: "End time in ISO format" },
+                    limit: { type: Type.NUMBER, description: "Maximum number of results to return (default 50, max 500)" },
+                    orderBy: { type: Type.STRING, description: "Sort order: 'time', 'time-asc', 'magnitude', or 'magnitude-asc'" }
+                  }
+                }
+              },
+              {
+                name: "scan_room",
+                description: "Scans the current camera feed to identify structural hazards and risks.",
+                parameters: { type: Type.OBJECT, properties: {} }
+              },
+              {
+                name: "simulate_aftermath",
+                description: "Generates a visual simulation of the room after a major earthquake.",
+                parameters: { type: Type.OBJECT, properties: {} }
+              },
+              {
+                name: "close_simulation",
+                description: "Closes the current earthquake aftermath simulation and returns to the live feed.",
+                parameters: { type: Type.OBJECT, properties: {} }
+              },
+              {
+                name: "stop_live_view",
+                description: "Stops the live view and disconnects the session.",
+                parameters: { type: Type.OBJECT, properties: {} }
               }
-            }]
+            ]
           }]
         },
         callbacks: {
@@ -202,6 +443,65 @@ export default function App() {
                       functionResponses: [{
                         name: "get_seismic_data",
                         response: { result: finalData },
+                        id: call.id
+                      }]
+                    });
+                  });
+                } else if (call.name === "query_earthquakes") {
+                  const args = call.args as any;
+                  const results = await queryEarthquakesApi(args);
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "query_earthquakes",
+                        response: { result: results },
+                        id: call.id
+                      }]
+                    });
+                  });
+                } else if (call.name === "scan_room") {
+                  scanForHazards();
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "scan_room",
+                        response: { result: "Scanning initiated." },
+                        id: call.id
+                      }]
+                    });
+                  });
+                } else if (call.name === "simulate_aftermath") {
+                  simulateAftermath();
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "simulate_aftermath",
+                        response: { result: "Simulation initiated." },
+                        id: call.id
+                      }]
+                    });
+                  });
+                } else if (call.name === "close_simulation") {
+                  setSimulatedImage(null);
+                  setBeforeImage(null);
+                  setStatus(AppStatus.ACTIVE);
+                  sounds.playCancel();
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "close_simulation",
+                        response: { result: "Simulation closed." },
+                        id: call.id
+                      }]
+                    });
+                  });
+                } else if (call.name === "stop_live_view") {
+                  disconnectLive();
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        name: "stop_live_view",
+                        response: { result: "Live view stopped." },
                         id: call.id
                       }]
                     });
@@ -322,6 +622,29 @@ export default function App() {
     nextAudioTimeRef.current = 0;
   };
 
+  const disconnectLive = () => {
+    stopAudioPlayback();
+    if (sessionRef.current) {
+      try {
+        sessionRef.current.close();
+      } catch (e) {}
+      sessionRef.current = null;
+    }
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+    setStatus(AppStatus.IDLE);
+    sounds.playCancel();
+  };
+
   // --- Simulation Logic ---
   const simulateAftermath = async () => {
     if (!hasApiKey) {
@@ -331,6 +654,7 @@ export default function App() {
     
     setStatus(AppStatus.SIMULATING);
     setSimulatedImage(null);
+    setBeforeImage(null);
     sounds.playShutter();
     
     abortControllerRef.current = new AbortController();
@@ -341,6 +665,7 @@ export default function App() {
         if (ctx) {
           ctx.drawImage(videoRef.current, 0, 0, 1024, 1024);
           const base64Image = canvasRef.current.toDataURL('image/png').split(',')[1];
+          setBeforeImage(`data:image/png;base64,${base64Image}`);
           
           const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
           const response = await ai.models.generateContent({
@@ -387,118 +712,134 @@ export default function App() {
     }
   };
 
-  const scanForHazards = () => {
+  const scanForHazards = async () => {
+    if (!hasApiKey) {
+      handleOpenKeySelector();
+      return;
+    }
+
     setIsScanning(true);
     isScanningRef.current = true;
     setHazardLog([]);
     setAnalysis(null);
     sounds.playScan();
     
-    // Trigger a manual analysis via the live session
+    // Trigger a manual analysis via the live session for audio feedback
     sessionRef.current?.sendClientContent({
-      turns: "Perform a full structural hazard scan of this environment. Identify at least 3 potential risks and their approximate locations in the frame."
+      turns: `I am scanning the room for hazards now. Please give a brief 1-sentence warning that the scan is commencing. Speak in ${language}.`
     });
-    
-    const mockIndicators: HazardIndicator[] = [
-      { 
-        id: '1', 
-        type: 'falling', 
-        label: 'Unsecured Shelving', 
-        details: 'Heavy industrial shelving unit (approx. 200kg) not anchored to wall studs. High risk of tipping during lateral acceleration > 0.3g.',
-        x: 25, 
-        y: 30,
-        timestamp: new Date().toISOString(),
-        confidence: 0.94
-      },
-      { 
-        id: '2', 
-        type: 'fire', 
-        label: 'Exposed Gas Line', 
-        details: 'Flexible yellow gas connector showing signs of corrosion. No automatic seismic shut-off valve detected on this branch. Estimated leak radius: 5m.',
-        x: 70, 
-        y: 80,
-        timestamp: new Date().toISOString(),
-        confidence: 0.88
-      },
-      { 
-        id: '3', 
-        type: 'structural', 
-        label: 'Ceiling Crack', 
-        details: 'Diagonal shear crack (approx. 15mm width) in load-bearing concrete beam. Indicates previous settlement or structural fatigue. High risk of spalling.',
-        x: 50, 
-        y: 15,
-        timestamp: new Date().toISOString(),
-        confidence: 0.91
-      },
-      { 
-        id: '4', 
-        type: 'glass', 
-        label: 'Large Window Pane', 
-        details: 'Non-tempered glass pane (2.4m x 1.8m). High risk of shattering and creating hazardous debris during moderate tremors. Recommend safety film application.',
-        x: 85, 
-        y: 40,
-        timestamp: new Date().toISOString(),
-        confidence: 0.97
-      },
-      { 
-        id: '5', 
-        type: 'falling', 
-        label: 'Unanchored Water Heater', 
-        details: '50-gallon water heater without seismic strapping. Risk of tipping, breaking gas lines, and causing flooding/fire hazards.',
-        x: 15, 
-        y: 65,
-        timestamp: new Date().toISOString(),
-        confidence: 0.82
-      },
-      { 
-        id: '6', 
-        type: 'exit', 
-        label: 'Primary Exit Path', 
-        details: 'Clear path to external egress. Width: 1.2m. Ensure path remains clear of debris from nearby unanchored objects.',
-        x: 10, 
-        y: 85,
-        timestamp: new Date().toISOString(),
-        confidence: 0.99
-      }
-    ];
 
-    // Sequential detection simulation
-    const filteredIndicators = mockIndicators.filter(i => i.confidence >= confidenceThreshold);
-    
-    if (filteredIndicators.length === 0) {
-      setTimeout(() => {
-        setIsScanning(false);
-        isScanningRef.current = false;
-        sounds.playCancel();
-      }, 1000);
-      return;
-    }
-
-    filteredIndicators.forEach((indicator, index) => {
-      setTimeout(() => {
-        if (!isScanningRef.current) return;
-        
-        setHazardLog(prev => [indicator, ...prev]);
-        sounds.playHazard();
-        
-        // On the last one, finalize analysis
-        if (index === filteredIndicators.length - 1) {
-          setAnalysis({
-            hazards: filteredIndicators.map(i => i.label),
-            recommendations: [
-              "Anchor all heavy shelving and furniture to wall studs",
-              "Install automatic seismic shut-off valves for gas lines",
-              "Apply safety film to large glass panes",
-              "Secure water heater with seismic straps",
-              "Reinforce structural beams showing shear cracks"
-            ],
-            structuralIntegrity: 68,
-            indicators: filteredIndicators
+    try {
+      if (videoRef.current && canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(videoRef.current, 0, 0, 1024, 1024);
+          const base64Image = canvasRef.current.toDataURL('image/jpeg', 0.8).split(',')[1];
+          
+          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+          const response = await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: {
+              parts: [
+                { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
+                { text: `Analyze this room for earthquake and structural hazards. Identify specific risks like unanchored furniture, large glass panes, heavy hanging objects, blocked exits, or structural weaknesses. Provide approximate X and Y coordinates (0-100 percentage, where 0,0 is top-left) for each hazard. IMPORTANT: All labels, details, and recommendations MUST be written in ${language}.` }
+              ]
+            },
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  hazards: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        type: { type: Type.STRING, description: "Must be one of: structural, falling, glass, fire, exit" },
+                        label: { type: Type.STRING },
+                        details: { type: Type.STRING },
+                        x: { type: Type.NUMBER, description: "X coordinate percentage (0-100)" },
+                        y: { type: Type.NUMBER, description: "Y coordinate percentage (0-100)" },
+                        confidence: { type: Type.NUMBER, description: "Confidence score (0.0 to 1.0)" }
+                      },
+                      required: ["type", "label", "details", "x", "y", "confidence"]
+                    }
+                  },
+                  recommendations: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  },
+                  structuralIntegrity: {
+                    type: Type.NUMBER,
+                    description: "Overall structural integrity score (0-100)"
+                  }
+                },
+                required: ["hazards", "recommendations", "structuralIntegrity"]
+              }
+            }
           });
-          setIsScanning(false);
+
+          if (!isScanningRef.current) return;
+
+          const resultText = response.text;
+          if (resultText) {
+            const parsed = JSON.parse(resultText);
+            
+            const newIndicators: HazardIndicator[] = parsed.hazards.map((h: any, i: number) => ({
+              id: `ai-${Date.now()}-${i}`,
+              type: ['structural', 'falling', 'glass', 'fire', 'exit'].includes(h.type) ? h.type : 'structural',
+              label: h.label,
+              details: h.details,
+              x: h.x,
+              y: h.y,
+              timestamp: new Date().toISOString(),
+              confidence: h.confidence
+            }));
+
+            // Sequential detection simulation
+            const filteredIndicators = newIndicators.filter(i => i.confidence >= confidenceThreshold);
+            
+            if (filteredIndicators.length === 0) {
+              setTimeout(() => {
+                setIsScanning(false);
+                isScanningRef.current = false;
+                sounds.playCancel();
+              }, 1000);
+              return;
+            }
+
+            filteredIndicators.forEach((indicator, index) => {
+              setTimeout(() => {
+                if (!isScanningRef.current) return;
+                
+                setHazardLog(prev => [indicator, ...prev]);
+                sounds.playHazard();
+                
+                // On the last one, finalize analysis
+                if (index === filteredIndicators.length - 1) {
+                  setAnalysis({
+                    hazards: filteredIndicators.map(i => i.label),
+                    recommendations: parsed.recommendations,
+                    structuralIntegrity: parsed.structuralIntegrity,
+                    indicators: filteredIndicators
+                  });
+                  setIsScanning(false);
+                  
+                  sessionRef.current?.sendClientContent({
+                    turns: `Scan complete. Found ${filteredIndicators.length} hazards including: ${filteredIndicators.map(i => i.label).join(', ')}. Give a brief 1-2 sentence safety recommendation in ${language}.`
+                  });
+                }
+              }, (index + 1) * 1200);
+            });
+          }
         }
-      }, (index + 1) * 1200);
-    });
+      }
+    } catch (err) {
+      console.error("Scan failed:", err);
+      setError("Failed to analyze environment. Please try again.");
+      setIsScanning(false);
+      isScanningRef.current = false;
+    }
   };
 
   const stopScan = () => {
@@ -525,8 +866,11 @@ export default function App() {
   // --- Real-time Polling ---
   useEffect(() => {
     const pollSeismicData = async () => {
-      const data = await fetchLatestSeismicEvent();
-      if (data) setSeismicData(data);
+      const data = await fetchRecentSeismicEvents(4);
+      if (data && data.length > 0) {
+        setSeismicData(data[0]);
+        setHistoricalSeismicData(data.slice(1, 4));
+      }
     };
 
     // Initial fetch
@@ -563,12 +907,37 @@ export default function App() {
               <ShieldAlert className="text-white w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tighter uppercase italic">SeismicSight</h1>
-              <p className="text-[10px] text-red-500 font-mono uppercase tracking-widest leading-none">Emergency Response Unit</p>
+              <h1 className="text-xl font-bold tracking-tighter uppercase italic">{t('title')}</h1>
+              <p className="text-[10px] text-red-500 font-mono uppercase tracking-widest leading-none">{t('subtitle')}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1">
+              <Globe className="w-3.5 h-3.5 text-neutral-400" />
+              <select 
+                value={language}
+                onChange={(e) => {
+                  setLanguage(e.target.value);
+                  // Optionally notify the live session of the language change
+                  if (status === AppStatus.ACTIVE) {
+                    sessionRef.current?.sendClientContent({
+                      turns: `The user has changed their language preference to ${e.target.value}. Please acknowledge this change briefly in ${e.target.value}.`
+                    });
+                  }
+                }}
+                className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-white focus:outline-none cursor-pointer"
+              >
+                <option value="English">English</option>
+                <option value="Spanish">Español</option>
+                <option value="French">Français</option>
+                <option value="Kiswahili">Kiswahili</option>
+                <option value="German">Deutsch</option>
+                <option value="Chinese">中文</option>
+                <option value="Arabic">العربية</option>
+              </select>
+            </div>
+            
             {status === AppStatus.ACTIVE && (
               <>
                 <button 
@@ -582,12 +951,12 @@ export default function App() {
                 >
                   {isVideoOff ? <VideoOff className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
                   <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">
-                    {isVideoOff ? "Camera Off" : "Camera On"}
+                    {isVideoOff ? t('cameraOff') : t('cameraOn')}
                   </span>
                 </button>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-red-950/50 border border-red-500/30 rounded-full">
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">Live Analysis Active</span>
+                  <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t('liveAnalysis')}</span>
                 </div>
               </>
             )}
@@ -596,7 +965,7 @@ export default function App() {
                 onClick={handleOpenKeySelector}
                 className="text-[10px] font-bold uppercase tracking-widest text-yellow-500 hover:text-yellow-400 flex items-center gap-1 transition-colors"
               >
-                <Zap className="w-3 h-3" /> Set API Key
+                <Zap className="w-3 h-3" /> {t('setApiKey')}
               </button>
             )}
           </div>
@@ -606,7 +975,16 @@ export default function App() {
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-80px)]">
         {/* Left Panel: Camera Feed */}
         <section className="relative flex flex-col gap-4">
-          <div className="relative flex-1 bg-black rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl group">
+          <div 
+            className={`relative flex-1 bg-black rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl group ${isAnnotationMode ? 'cursor-crosshair' : ''}`}
+            onClick={(e) => {
+              if (!isAnnotationMode || isVideoOff || status !== AppStatus.ACTIVE) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              setNewAnnotationPos({ x, y });
+            }}
+          >
             {/* Camera View */}
             <video 
               ref={videoRef} 
@@ -631,13 +1009,13 @@ export default function App() {
                   <div className="w-20 h-20 bg-neutral-800 rounded-full flex items-center justify-center mb-4 border border-white/10">
                     <VideoOff className="w-10 h-10 text-neutral-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-white uppercase tracking-tighter italic">Camera Feed Disabled</h3>
-                  <p className="text-xs text-neutral-500 font-mono uppercase tracking-widest mt-2">Privacy Mode Active</p>
+                  <h3 className="text-lg font-bold text-white uppercase tracking-tighter italic">{t('cameraDisabled')}</h3>
+                  <p className="text-xs text-neutral-500 font-mono uppercase tracking-widest mt-2">{t('privacyMode')}</p>
                   <button 
                     onClick={toggleVideo}
                     className="mt-6 px-6 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-all uppercase tracking-widest"
                   >
-                    Enable Camera
+                    {t('enableCamera')}
                   </button>
                 </motion.div>
               )}
@@ -656,7 +1034,7 @@ export default function App() {
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
                     <div className="px-4 py-2 bg-red-600/80 backdrop-blur-md rounded-full border border-white/20 flex items-center gap-2">
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span className="text-xs font-bold uppercase tracking-widest">Scanning Environment...</span>
+                      <span className="text-xs font-bold uppercase tracking-widest">{t('scanning')}</span>
                     </div>
                   </div>
                 )}
@@ -665,7 +1043,7 @@ export default function App() {
 
             {/* Hazard Overlays */}
             <AnimatePresence>
-              {status === AppStatus.ACTIVE && !isVideoOff && analysis?.indicators.map((indicator) => (
+              {status === AppStatus.ACTIVE && !isVideoOff && hazardLog.map((indicator) => (
                 <motion.div
                   key={indicator.id}
                   initial={{ scale: 0, opacity: 0 }}
@@ -701,6 +1079,78 @@ export default function App() {
               ))}
             </AnimatePresence>
             
+            {/* New Annotation Form */}
+            <AnimatePresence>
+              {newAnnotationPos && (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  style={{ left: `${newAnnotationPos.x}%`, top: `${newAnnotationPos.y}%` }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 z-50 w-64 bg-black/90 backdrop-blur-xl border border-blue-500/50 rounded-xl p-4 shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">{t('addHazard')}</h4>
+                  <div className="space-y-3">
+                    <select 
+                      value={annotationForm.type}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, type: e.target.value as HazardIndicator['type'] }))}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="structural">{t('structural')}</option>
+                      <option value="falling">{t('falling')}</option>
+                      <option value="glass">{t('glass')}</option>
+                      <option value="fire">{t('fire')}</option>
+                      <option value="exit">{t('exit')}</option>
+                    </select>
+                    <input 
+                      type="text"
+                      placeholder={t('hazardLabel')}
+                      value={annotationForm.label}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, label: e.target.value }))}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    />
+                    <textarea 
+                      placeholder={t('details')}
+                      value={annotationForm.details}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, details: e.target.value }))}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white h-16 resize-none focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex gap-2 pt-1">
+                      <button 
+                        onClick={() => setNewAnnotationPos(null)}
+                        className="flex-1 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg transition-colors"
+                      >
+                        {t('cancel')}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (!annotationForm.label) return;
+                          const newHazard: HazardIndicator = {
+                            id: `manual-${Date.now()}`,
+                            type: annotationForm.type,
+                            label: annotationForm.label,
+                            details: annotationForm.details,
+                            x: newAnnotationPos.x,
+                            y: newAnnotationPos.y,
+                            timestamp: new Date().toISOString(),
+                            confidence: 1.0
+                          };
+                          setHazardLog(prev => [newHazard, ...prev]);
+                          setNewAnnotationPos(null);
+                          setAnnotationForm({ type: 'structural', label: '', details: '' });
+                          sounds.playSuccess();
+                        }}
+                        className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+                      >
+                        {t('save')}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
             {/* Hazard Detail Panel */}
             <AnimatePresence>
               {selectedIndicator && (
@@ -715,14 +1165,29 @@ export default function App() {
                       <div className="p-1.5 bg-red-600/20 rounded-lg text-red-500">
                         {getHazardIcon(selectedIndicator.type)}
                       </div>
-                      <h4 className="font-bold text-sm text-white uppercase tracking-tight">Hazard Detail</h4>
+                      <h4 className="font-bold text-sm text-white uppercase tracking-tight">{t('hazardDetail')}</h4>
                     </div>
-                    <button 
-                      onClick={() => setSelectedIndicator(null)}
-                      className="p-1 hover:bg-white/10 rounded-md transition-colors text-neutral-500 hover:text-white"
-                    >
-                      <RefreshCw className="w-4 h-4 rotate-45" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {isAnnotationMode && (
+                        <button 
+                          onClick={() => {
+                            setHazardLog(prev => prev.filter(h => h.id !== selectedIndicator.id));
+                            setSelectedIndicator(null);
+                            sounds.playCancel();
+                          }}
+                          className="p-1 hover:bg-red-500/20 rounded-md transition-colors text-red-500"
+                          title="Delete Annotation"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setSelectedIndicator(null)}
+                        className="p-1 hover:bg-white/10 rounded-md transition-colors text-neutral-500 hover:text-white"
+                      >
+                        <RefreshCw className="w-4 h-4 rotate-45" />
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="space-y-4">
@@ -750,13 +1215,13 @@ export default function App() {
             {status === AppStatus.IDLE && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
                 <Activity className="w-16 h-16 text-red-600 mb-6 animate-pulse" />
-                <h2 className="text-2xl font-bold mb-2">Initialize System</h2>
-                <p className="text-neutral-400 text-sm mb-8 text-center max-w-xs">Connect to the live seismic analysis network to begin scanning.</p>
+                <h2 className="text-2xl font-bold mb-2">{t('initSystem')}</h2>
+                <p className="text-neutral-400 text-sm mb-8 text-center max-w-xs">{t('connectMsg')}</p>
                 <button 
                   onClick={connectLive}
                   className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-red-600/20"
                 >
-                  Establish Connection
+                  {t('establishConn')}
                 </button>
               </div>
             )}
@@ -764,28 +1229,39 @@ export default function App() {
             {status === AppStatus.CONNECTING && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
                 <RefreshCw className="w-12 h-12 text-red-500 animate-spin mb-4" />
-                <p className="text-sm font-mono uppercase tracking-widest text-red-400">Syncing with Satellite...</p>
+                <p className="text-sm font-mono uppercase tracking-widest text-red-400">{t('syncing')}</p>
               </div>
             )}
 
             {/* Simulation Result Overlay */}
             <AnimatePresence>
-              {simulatedImage && (
+              {simulatedImage && beforeImage && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black z-40"
+                  className="absolute inset-0 bg-black z-40 flex flex-col md:flex-row"
                 >
-                  <img src={simulatedImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  <div className="absolute top-4 left-4 bg-red-600 px-3 py-1 rounded font-mono text-xs font-bold uppercase tracking-widest">
-                    Simulated Aftermath
+                  <div className="flex-1 relative border-r border-neutral-800">
+                    <img src={beforeImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute top-4 left-4 bg-neutral-800/80 backdrop-blur-md px-3 py-1 rounded font-mono text-xs font-bold uppercase tracking-widest text-white border border-white/10">
+                      Before
+                    </div>
+                  </div>
+                  <div className="flex-1 relative">
+                    <img src={simulatedImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute top-4 left-4 bg-red-600/80 backdrop-blur-md px-3 py-1 rounded font-mono text-xs font-bold uppercase tracking-widest text-white border border-red-500/50">
+                      {t('simAftermath')}
+                    </div>
                   </div>
                   <button 
-                    onClick={() => setSimulatedImage(null)}
-                    className="absolute bottom-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                    onClick={() => {
+                      setSimulatedImage(null);
+                      setBeforeImage(null);
+                    }}
+                    className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 px-4 py-2 rounded-lg text-xs font-bold transition-colors text-white"
                   >
-                    Close Simulation
+                    {t('closeSim')}
                   </button>
                 </motion.div>
               )}
@@ -819,19 +1295,27 @@ export default function App() {
                 >
                   {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
                 </button>
+                <div className="w-px h-8 bg-white/20 mx-2"></div>
+                <button 
+                  onClick={disconnectLive}
+                  className="p-3 rounded-xl transition-colors bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20"
+                  title="Disconnect"
+                >
+                  <Power className="w-5 h-5" />
+                </button>
               </div>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {isScanning || analysis ? (
               <button 
                 onClick={stopScan}
                 className="flex items-center justify-center gap-2 py-4 bg-neutral-900 hover:bg-neutral-800 border border-red-900/50 text-red-500 rounded-xl font-bold text-sm transition-all"
               >
                 <RefreshCw className="w-4 h-4" />
-                Stop Scan / Clear
+                {t('clear')}
               </button>
             ) : (
               <button 
@@ -840,9 +1324,25 @@ export default function App() {
                 className="flex items-center justify-center gap-2 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Camera className="w-4 h-4 text-red-500" />
-                Scan for Hazards
+                {t('scan')}
               </button>
             )}
+
+            <button
+              disabled={status !== AppStatus.ACTIVE}
+              onClick={() => {
+                setIsAnnotationMode(!isAnnotationMode);
+                setNewAnnotationPos(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                isAnnotationMode 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20' 
+                  : 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300'
+              }`}
+            >
+              <Crosshair className={`w-4 h-4 ${isAnnotationMode ? 'text-white' : 'text-blue-500'}`} />
+              {t('annotate')}
+            </button>
 
             {status === AppStatus.SIMULATING ? (
               <button 
@@ -850,7 +1350,7 @@ export default function App() {
                 className="flex items-center justify-center gap-2 py-4 bg-red-950/50 border border-red-500/50 text-red-500 rounded-xl font-bold text-sm transition-all"
               >
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                Cancel Simulation
+                {t('cancel')}
               </button>
             ) : (
               <button 
@@ -859,7 +1359,7 @@ export default function App() {
                 className="flex items-center justify-center gap-2 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Zap className="w-4 h-4 fill-current" />
-                Simulate Aftermath
+                {t('simulate')}
               </button>
             )}
           </div>
@@ -868,34 +1368,41 @@ export default function App() {
         {/* Right Panel: Safety Analysis */}
         <section className="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
           {/* Seismic Activity Card */}
-          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 blur-[60px] rounded-full" />
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 relative overflow-hidden shrink-0">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 blur-[60px] rounded-full pointer-events-none" />
+            <div className="relative z-10 flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-red-500" />
-                <h3 className="font-bold uppercase tracking-widest text-xs text-neutral-400">Significant Activity Board (5.0+)</h3>
+                <h3 className="font-bold uppercase tracking-widest text-xs text-neutral-400">{t('sigActivity')}</h3>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Live USGS</span>
+                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">{t('liveUsgs')}</span>
                 </div>
                 <button 
                   onClick={async () => {
-                    const data = await fetchLatestSeismicEvent();
-                    if (data) setSeismicData(data);
+                    setIsRefreshing(true);
+                    const data = await fetchRecentSeismicEvents(4);
+                    if (data && data.length > 0) {
+                      setSeismicData(data[0]);
+                      setHistoricalSeismicData(data.slice(1, 4));
+                    }
                     sounds.playScan();
+                    setIsRefreshing(false);
                   }}
-                  className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-neutral-500 hover:text-white"
+                  disabled={isRefreshing}
+                  className="flex items-center gap-1.5 px-2 py-1 hover:bg-white/10 rounded-md transition-colors text-neutral-500 hover:text-white disabled:opacity-50"
                   title="Refresh Live Data"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">{t('refresh')}</span>
                 </button>
               </div>
             </div>
 
             {seismicData ? (
-              <div className="space-y-6">
+              <div className="space-y-6 relative z-10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-2">
                     <span className={`text-6xl font-black italic tracking-tighter ${
@@ -923,11 +1430,11 @@ export default function App() {
 
                 <div className="grid grid-cols-3 gap-4 pt-4 border-t border-neutral-800/50">
                   <div>
-                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Depth</p>
+                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">{t('depth')}</p>
                     <p className="text-xs font-mono text-white">{seismicData.depth.toFixed(1)} km</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Timestamp (UTC)</p>
+                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">{t('time')} (UTC)</p>
                     <p className="text-xs font-mono text-white">{new Date(seismicData.timestamp).toLocaleString()}</p>
                   </div>
                 </div>
@@ -945,17 +1452,49 @@ export default function App() {
                       : "MODERATE: Significant shaking detected. Monitor local news and stay clear of glass."}
                   </p>
                 </div>
+
+                {historicalSeismicData.length > 0 && (
+                  <div className="pt-4 border-t border-neutral-800/50">
+                    <p className="text-[10px] text-neutral-500 uppercase font-bold mb-3 flex items-center gap-2">
+                      <Activity className="w-3 h-3 text-neutral-400" /> {t('recentAlerts')}
+                    </p>
+                    <div className="space-y-2">
+                      {historicalSeismicData.map((data, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-neutral-800/30 rounded-lg border border-neutral-800/50">
+                          <div className="flex items-center gap-3">
+                            <span className={`text-sm font-black italic ${
+                              data.magnitude >= 7.0 ? 'text-red-500' : 
+                              data.magnitude >= 6.0 ? 'text-orange-500' : 'text-yellow-500'
+                            }`}>
+                              {data.magnitude.toFixed(1)}
+                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-white font-bold truncate max-w-[120px]">{data.location}</span>
+                              <span className="text-[9px] text-neutral-500 font-mono">{new Date(data.timestamp).toLocaleTimeString()}</span>
+                            </div>
+                          </div>
+                          <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                            data.riskLevel === 'Critical' ? 'bg-red-500/10 text-red-500' :
+                            data.riskLevel === 'High' ? 'bg-orange-500/10 text-orange-500' : 'bg-yellow-500/10 text-yellow-500'
+                          }`}>
+                            {data.riskLevel}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="py-12 flex flex-col items-center justify-center text-neutral-600">
                 <RefreshCw className="w-8 h-8 mb-3 opacity-20 animate-spin-slow" />
-                <p className="text-xs font-mono uppercase tracking-widest">Syncing with USGS Global Network...</p>
+                <p className="text-xs font-mono uppercase tracking-widest">{t('awaiting')}</p>
               </div>
             )}
           </div>
 
           {/* Hazard Analysis Card */}
-          <div className="flex-1 bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 flex flex-col overflow-hidden">
+          <div className="flex-1 bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 flex flex-col overflow-hidden min-h-[400px] shrink-0">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-red-500" />
@@ -982,7 +1521,7 @@ export default function App() {
                     className="flex items-center gap-1.5 px-2 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-md text-[10px] font-bold text-red-500 uppercase tracking-wider transition-colors"
                   >
                     <RefreshCw className="w-3 h-3" />
-                    Clear All
+                    {t('clear')}
                   </button>
                 )}
               </div>
@@ -993,7 +1532,7 @@ export default function App() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] text-neutral-500 uppercase font-bold flex items-center gap-2">
-                    <Layers className="w-3 h-3 text-red-500" /> Live Hazard Feed
+                    <Layers className="w-3 h-3 text-red-500" /> {t('liveFeed')}
                   </p>
                   {isScanning && (
                     <span className="flex items-center gap-1 text-[9px] font-bold text-red-500 animate-pulse">
@@ -1050,7 +1589,7 @@ export default function App() {
                       !isScanning && (
                         <div className="py-8 border border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center text-neutral-600">
                           <ShieldAlert className="w-6 h-6 mb-2 opacity-20" />
-                          <p className="text-[10px] font-mono uppercase tracking-widest text-center px-4">Initiate Scan to Analyze Environment</p>
+                          <p className="text-[10px] font-mono uppercase tracking-widest text-center px-4">{t('noHazards')}</p>
                         </div>
                       )
                     )}
@@ -1067,7 +1606,7 @@ export default function App() {
                   {/* Structural Integrity Bar */}
                   <div>
                     <div className="flex justify-between items-end mb-2">
-                      <p className="text-[10px] text-neutral-500 uppercase font-bold">Structural Integrity Index</p>
+                      <p className="text-[10px] text-neutral-500 uppercase font-bold">{t('structIntegrity')}</p>
                       <p className={`text-lg font-black italic ${
                         analysis.structuralIntegrity < 50 ? 'text-red-500' : 
                         analysis.structuralIntegrity < 80 ? 'text-yellow-500' : 'text-emerald-500'
@@ -1090,7 +1629,7 @@ export default function App() {
                   {/* Recommendations */}
                   <div>
                     <p className="text-[10px] text-neutral-500 uppercase font-bold mb-3 flex items-center gap-2">
-                      <Zap className="w-3 h-3 text-yellow-500" /> Mitigation Strategy
+                      <Zap className="w-3 h-3 text-yellow-500" /> {t('safetyRecs')}
                     </p>
                     <div className="grid grid-cols-1 gap-2">
                       {analysis.recommendations.map((rec, i) => (
@@ -1139,22 +1678,6 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #262626;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #404040;
-        }
-      `}</style>
     </div>
   );
 }
