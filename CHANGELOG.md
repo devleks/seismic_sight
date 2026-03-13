@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-13
+
+### Added
+- **API Key Configuration:** Added support for serving the Gemini API key via backend environment variables (`/api/config`) for seamless Cloud Run deployments.
+- **Manual API Key Prompt:** Added a fallback manual prompt for users to enter their Gemini API key if it is not provided via environment variables or the AI Studio interface.
+
+### Changed
+- Updated `README.md` and `userguide.md` to reflect the new API key configuration methods and deployment instructions.
+- Bumped version to `1.2.0`.
+
 ## [1.1.0] - 2026-03-09
 
 ### Added

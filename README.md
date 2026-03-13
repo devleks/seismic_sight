@@ -44,7 +44,28 @@ Once the live connection is established, you can use the following voice command
 
 ## Configuration
 
-To use the AI features, you will need a valid Google Gemini API key. The application will prompt you to select or enter your key upon initialization.
+To use the AI features, you will need a valid Google Gemini API key. The application supports multiple ways to configure this:
+
+1. **Environment Variable (Recommended for Deployment):** Set the `GEMINI_API_KEY` or `API_KEY` environment variable in your deployment environment (e.g., Google Cloud Run). The backend will securely provide this to the frontend.
+2. **AI Studio Interface:** If running within Google AI Studio, the application will automatically use the platform's key selector.
+3. **Manual Entry:** If no key is found, the application will prompt you to manually enter your Gemini API key, which will be securely stored in your browser's session storage for the duration of your visit.
+
+## Architecture
+
+For a detailed breakdown of the system architecture and data flow, please see the [Architecture Diagram](ARCHITECTURE.md).
+
+### Architecture Drawings
+
+The following architecture drawings were generated using **Nano Banana 2** (Gemini 3.1 Flash Image Preview):
+
+- **Architecture Overview**  
+  ![Architecture Overview](Architecture%20Overview.png)
+
+- **Architecture Workflow**  
+  ![Architecture Workflow](Architecture%20workflow.png)
+
+- **AI Architecture Overview**  
+  ![AI Architecture Overview](AI%20Architecture%20Overview.png)
 
 ## Versioning
 

@@ -4,7 +4,9 @@ Welcome to SeismicSight, your Emergency Disaster Guardian. This guide will help 
 
 ## Getting Started
 
-When you first open SeismicSight, you will be prompted to provide access to your camera and microphone. These are necessary for the real-time hazard detection and voice interaction features. You will also need to authenticate with a valid Google Gemini API key to enable the AI analysis.
+When you first open SeismicSight, you will be prompted to provide access to your camera and microphone. These are necessary for the real-time hazard detection and voice interaction features. 
+
+You will also need to authenticate with a valid Google Gemini API key to enable the AI analysis. If the application is deployed with an API key configured as an environment variable, this will happen automatically. Otherwise, you can click the **Set API Key** button to manually enter your key, which will be saved securely in your browser's session for your current visit.
 
 ## Main Interface
 
