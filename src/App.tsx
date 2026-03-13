@@ -269,9 +269,25 @@ export default function App() {
   // --- API Key Handling ---
   useEffect(() => {
     const checkKey = async () => {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.apiKey) {
+            sessionStorage.setItem("GEMINI_API_KEY", data.apiKey);
+            setHasApiKey(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Ignore fetch errors in dev mode
+      }
+
       if (window.aistudio?.hasSelectedApiKey) {
         const selected = await window.aistudio.hasSelectedApiKey();
         setHasApiKey(selected);
+      } else if (sessionStorage.getItem("GEMINI_API_KEY")) {
+        setHasApiKey(true);
       }
     };
     checkKey();
@@ -281,7 +297,17 @@ export default function App() {
     if (window.aistudio?.openSelectKey) {
       await window.aistudio.openSelectKey();
       setHasApiKey(true);
+    } else {
+      const key = prompt("Please enter your Gemini API Key:");
+      if (key) {
+        sessionStorage.setItem("GEMINI_API_KEY", key);
+        setHasApiKey(true);
+      }
     }
+  };
+
+  const getApiKey = () => {
+    return sessionStorage.getItem("GEMINI_API_KEY") || process.env.API_KEY || process.env.GEMINI_API_KEY || "";
   };
 
   // --- Camera Setup ---
@@ -350,7 +376,7 @@ export default function App() {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       
       const sessionPromise = ai.live.connect({
         model: LIVE_MODEL,
@@ -667,7 +693,7 @@ export default function App() {
           const base64Image = canvasRef.current.toDataURL('image/png').split(',')[1];
           setBeforeImage(`data:image/png;base64,${base64Image}`);
           
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+          const ai = new GoogleGenAI({ apiKey: getApiKey() });
           const response = await ai.models.generateContent({
             model: SIM_MODEL,
             contents: {
@@ -736,7 +762,7 @@ export default function App() {
           ctx.drawImage(videoRef.current, 0, 0, 1024, 1024);
           const base64Image = canvasRef.current.toDataURL('image/jpeg', 0.8).split(',')[1];
           
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+          const ai = new GoogleGenAI({ apiKey: getApiKey() });
           const response = await ai.models.generateContent({
             model: "gemini-3.1-pro-preview",
             contents: {

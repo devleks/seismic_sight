@@ -11,6 +11,13 @@ const app = express();
 // Cloud Run sets the PORT environment variable. Default to 8080 if not set.
 const PORT = process.env.PORT || 8080;
 
+// Expose API key to the frontend (since Vite build bakes in undefined if not set at build time)
+app.get('/api/config', (req, res) => {
+  res.json({
+    apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || ''
+  });
+});
+
 // Serve the static files from the React build directory (dist)
 const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));
