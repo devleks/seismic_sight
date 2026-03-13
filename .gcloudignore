@@ -1,0 +1,7 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+dist/
+.env
+Dockerfile_to_delete

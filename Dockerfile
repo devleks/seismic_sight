@@ -1,5 +1,5 @@
 # Stage 1: Build the Vite Frontend
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production Runtime
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 
@@ -28,17 +28,16 @@ RUN npm install --omit=dev
 # Copy the built frontend from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Copy your server-side code (Express/Node)
-# Ensure this matches your actual server filename (e.g., server.js)
-COPY . .
+# Copy ONLY your server-side code to prevent overwriting node_modules
+# if .dockerignore is accidentally bypassed during upload
+COPY server.js ./
 
 # Use a non-root user for security
 USER node
 
 EXPOSE 8080
-ENV PORT 8080
+ENV PORT=8080
 ENV NODE_ENV=production
 
-# Start your Express server, NOT the vite-dist folder directly
-# Adjust "server.js" if your entry file has a different name
+# Start your Express server
 CMD ["node", "server.js"]
