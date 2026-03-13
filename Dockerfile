@@ -1,25 +1,37 @@
-# Stage 1: Build the React application
+# Stage 1: Build
 FROM node:20-alpine AS builder
+
 WORKDIR /app
 
-# Install dependencies
+# Copy only dependency files first to leverage Docker cache
+# If these files don't change, Docker skips 'npm ci' in future builds
 COPY package*.json ./
+
+# RUN npm ci requires package-lock.json to exist in the same directory
 RUN npm ci
 
-# Copy source code and build
+# Copy the rest of the application code
 COPY . .
+
+# Build the app (if applicable, e.g., for TypeScript or React)
 RUN npm run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine
+# Stage 2: Production
+FROM node:20-alpine AS runner
 
-# Copy the custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy the built assets from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Only copy necessary files from the builder stage
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist 
+# Note: Adjust './dist' to your actual build output folder (e.g., './build' or './.next')
 
-# Cloud Run expects the container to listen on port 8080 by default
+# Use a non-root user for better security in Cloud Run
+USER node
+
 EXPOSE 8080
+ENV PORT 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application directly with node (best practice for signals)
+CMD ["node", "dist/index.js"]
