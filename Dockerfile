@@ -35,8 +35,6 @@ COPY server.js ./
 # Use a non-root user for security
 USER node
 
-EXPOSE 8080
-ENV PORT=8080
 ENV NODE_ENV=production
 
 # Start your Express server
