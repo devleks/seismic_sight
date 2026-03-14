@@ -76,7 +76,11 @@ The following architecture drawings were generated using **Nano Banana 2** (Gemi
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [CHANGELOG.md](CHANGELOG.md).
 
-## Disclaimer
+## Disclaimer of Liability
 
 **PREDICTIVE SIMULATION: NOT A REAL-TIME EVENT.**
-This AI analysis is for simulation and training purposes. In a real seismic event, follow local authority guidelines and established evacuation protocols immediately.
+This AI analysis and the generated simulations are for educational purposes only. In a real seismic event, follow local authority guidelines and established evacuation protocols immediately. The developers assume no liability for any actions taken based on the information provided by this application.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
