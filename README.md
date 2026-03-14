@@ -10,6 +10,8 @@ SeismicSight is an elite Emergency Disaster Guardian application designed to pro
 - **USGS Data Integration:** Fetches live seismic data from the US Geological Survey (USGS) to provide real-time alerts and safety protocols based on recent global events.
 - **Voice Commands:** Control the application hands-free using voice commands. You can ask the AI to scan the room, simulate an earthquake, close the simulation, query the USGS API for specific earthquake data, or stop the live view.
 - **Adjustable Confidence Threshold:** Fine-tune the AI's sensitivity to reduce false positives and focus on the most critical hazards.
+- **Secure API Key Management:** Enter your Gemini API key via a secure, masked modal dialog.
+- **Cost-Optimized AI Integration:** Built-in rate limiting (30s for simulation, 15s for scanning) and a reduced 1fps video feed to minimize API token consumption and costs.
 
 ## Tech Stack
 
@@ -31,6 +33,8 @@ SeismicSight is an elite Emergency Disaster Guardian application designed to pro
    npm run dev
    ```
 4. Open your browser and navigate to the provided local URL.
+
+For detailed instructions on how to use the application, please refer to the [User Guide](USERGUIDE.md).
 
 ## Voice Commands
 

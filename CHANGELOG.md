@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-13
+
+### Added
+- **API Key Modal:** Implemented a secure, custom React modal for entering the Gemini API key. This replaces the default browser prompt, masking the input to protect against shoulder-surfing.
+- **Rate Limiting:** Added cooldowns to expensive AI operations to reduce API overuse and costs. The "Simulate" feature now has a 30-second cooldown, and the "Scan" feature has a 15-second cooldown.
+
+### Changed
+- **Frame Rate Reduction:** Reduced the video frame rate sent to the Live API from 2fps to 1fps. This cuts video token consumption by 50% without significantly impacting the AI's situational awareness.
+- Updated documentation (`README.md`, `USERGUIDE.md`, `CHANGELOG.md`) and bumped version to `1.3.0`.
+
 ## [1.2.0] - 2026-03-13
 
 ### Added
@@ -12,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual API Key Prompt:** Added a fallback manual prompt for users to enter their Gemini API key if it is not provided via environment variables or the AI Studio interface.
 
 ### Changed
-- Updated `README.md` and `userguide.md` to reflect the new API key configuration methods and deployment instructions.
+- Updated `README.md` and `USERGUIDE.md` to reflect the new API key configuration methods and deployment instructions.
 - Bumped version to `1.2.0`.
 
 ## [1.1.0] - 2026-03-09

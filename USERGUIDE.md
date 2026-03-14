@@ -6,7 +6,16 @@ Welcome to SeismicSight, your Emergency Disaster Guardian. This guide will help 
 
 When you first open SeismicSight, you will be prompted to provide access to your camera and microphone. These are necessary for the real-time hazard detection and voice interaction features. 
 
-You will also need to authenticate with a valid Google Gemini API key to enable the AI analysis. If the application is deployed with an API key configured as an environment variable, this will happen automatically. Otherwise, you can click the **Set API Key** button to manually enter your key, which will be saved securely in your browser's session for your current visit.
+You will also need to authenticate with a valid Google Gemini API key to enable the AI analysis. If the application is deployed with an API key configured as an environment variable, this will happen automatically. Otherwise, you can click the **Set API Key** button to manually enter your key. A secure, masked modal will appear, ensuring your key is protected from shoulder-surfing. The key is saved securely in your browser's session for your current visit.
+
+## Rate Limiting and Costs
+
+To help manage API usage and reduce costs, SeismicSight implements rate limiting on its most resource-intensive features:
+- **Hazard Scans:** Limited to one scan every 15 seconds.
+- **Predictive Simulations:** Limited to one simulation every 30 seconds.
+- **Live Video Feed:** The video frame rate sent to the AI has been optimized to 1 frame per second, significantly reducing video token consumption while maintaining situational awareness.
+
+If you attempt to trigger a scan or simulation before the cooldown expires, an error message will display the remaining time.
 
 ## Main Interface
 
