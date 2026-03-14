@@ -251,6 +251,8 @@ export default function App() {
   const [newAnnotationPos, setNewAnnotationPos] = useState<{x: number, y: number} | null>(null);
   const [annotationForm, setAnnotationForm] = useState({ type: 'structural' as HazardIndicator['type'], label: '', details: '' });
   const [language, setLanguage] = useState('English');
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState("");
   const t = (key: string) => translations[language]?.[key] || translations['English'][key] || key;
 
   // --- Refs ---
@@ -265,6 +267,11 @@ export default function App() {
   const isScanningRef = useRef(false);
   const nextAudioTimeRef = useRef<number>(0);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+
+  const lastSimulateTimeRef = useRef<number>(0);
+  const lastScanTimeRef = useRef<number>(0);
+  const SIMULATE_COOLDOWN_MS = 30000; // 30 seconds
+  const SCAN_COOLDOWN_MS = 15000; // 15 seconds
 
   // --- API Key Handling ---
   useEffect(() => {
@@ -298,11 +305,16 @@ export default function App() {
       await window.aistudio.openSelectKey();
       setHasApiKey(true);
     } else {
-      const key = prompt("Please enter your Gemini API Key:");
-      if (key) {
-        sessionStorage.setItem("GEMINI_API_KEY", key);
-        setHasApiKey(true);
-      }
+      setShowApiKeyModal(true);
+    }
+  };
+
+  const submitApiKey = () => {
+    if (tempApiKey.trim()) {
+      sessionStorage.setItem("GEMINI_API_KEY", tempApiKey.trim());
+      setHasApiKey(true);
+      setShowApiKeyModal(false);
+      setTempApiKey("");
     }
   };
 
@@ -486,25 +498,27 @@ export default function App() {
                     });
                   });
                 } else if (call.name === "scan_room") {
-                  scanForHazards();
-                  sessionPromise.then(session => {
-                    session.sendToolResponse({
-                      functionResponses: [{
-                        name: "scan_room",
-                        response: { result: "Scanning initiated." },
-                        id: call.id
-                      }]
+                  scanForHazards().then(success => {
+                    sessionPromise.then(session => {
+                      session.sendToolResponse({
+                        functionResponses: [{
+                          name: "scan_room",
+                          response: { result: success ? "Scanning initiated." : "Rate limited. Please wait." },
+                          id: call.id
+                        }]
+                      });
                     });
                   });
                 } else if (call.name === "simulate_aftermath") {
-                  simulateAftermath();
-                  sessionPromise.then(session => {
-                    session.sendToolResponse({
-                      functionResponses: [{
-                        name: "simulate_aftermath",
-                        response: { result: "Simulation initiated." },
-                        id: call.id
-                      }]
+                  simulateAftermath().then(success => {
+                    sessionPromise.then(session => {
+                      session.sendToolResponse({
+                        functionResponses: [{
+                          name: "simulate_aftermath",
+                          response: { result: success ? "Simulation initiated." : "Rate limited. Please wait." },
+                          id: call.id
+                        }]
+                      });
                     });
                   });
                 } else if (call.name === "close_simulation") {
@@ -602,7 +616,7 @@ export default function App() {
           });
         }
       }
-      setTimeout(() => requestAnimationFrame(sendFrame), 500); // 2fps for efficiency
+      setTimeout(() => requestAnimationFrame(sendFrame), 1000); // 1fps for efficiency and cost reduction
     };
     sendFrame();
   };
@@ -672,12 +686,20 @@ export default function App() {
   };
 
   // --- Simulation Logic ---
-  const simulateAftermath = async () => {
+  const simulateAftermath = async (): Promise<boolean> => {
     if (!hasApiKey) {
       handleOpenKeySelector();
-      return;
+      return false;
     }
     
+    const now = Date.now();
+    if (now - lastSimulateTimeRef.current < SIMULATE_COOLDOWN_MS) {
+      const remaining = Math.ceil((SIMULATE_COOLDOWN_MS - (now - lastSimulateTimeRef.current)) / 1000);
+      setError(`Rate limit: Please wait ${remaining} seconds before simulating again.`);
+      return false;
+    }
+    lastSimulateTimeRef.current = now;
+
     setStatus(AppStatus.SIMULATING);
     setSimulatedImage(null);
     setBeforeImage(null);
@@ -719,15 +741,17 @@ export default function App() {
         }
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return;
+      if (err.name === 'AbortError') return false;
       console.error("Simulation failed:", err);
       setError("Simulation failed. Please try again.");
+      return false;
     } finally {
       if (!abortControllerRef.current?.signal.aborted) {
         setStatus(AppStatus.ACTIVE);
       }
       abortControllerRef.current = null;
     }
+    return true;
   };
 
   const cancelSimulation = () => {
@@ -738,11 +762,19 @@ export default function App() {
     }
   };
 
-  const scanForHazards = async () => {
+  const scanForHazards = async (): Promise<boolean> => {
     if (!hasApiKey) {
       handleOpenKeySelector();
-      return;
+      return false;
     }
+
+    const now = Date.now();
+    if (now - lastScanTimeRef.current < SCAN_COOLDOWN_MS) {
+      const remaining = Math.ceil((SCAN_COOLDOWN_MS - (now - lastScanTimeRef.current)) / 1000);
+      setError(`Rate limit: Please wait ${remaining} seconds before scanning again.`);
+      return false;
+    }
+    lastScanTimeRef.current = now;
 
     setIsScanning(true);
     isScanningRef.current = true;
@@ -831,7 +863,7 @@ export default function App() {
                 isScanningRef.current = false;
                 sounds.playCancel();
               }, 1000);
-              return;
+              return true;
             }
 
             filteredIndicators.forEach((indicator, index) => {
@@ -865,7 +897,9 @@ export default function App() {
       setError("Failed to analyze environment. Please try again.");
       setIsScanning(false);
       isScanningRef.current = false;
+      return false;
     }
+    return true;
   };
 
   const stopScan = () => {
@@ -1701,6 +1735,69 @@ export default function App() {
             <button onClick={() => setError(null)} className="ml-4 hover:opacity-70">
               <RefreshCw className="w-4 h-4" />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* API Key Modal */}
+      <AnimatePresence>
+        {showApiKeyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+            >
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-emerald-500" />
+                Set API Key
+              </h2>
+              <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
+                Please enter your Gemini API Key. It will be stored securely in your browser's session storage and will not be sent to any external servers other than Google's API.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submitApiKey();
+                    }}
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowApiKeyModal(false);
+                      setTempApiKey("");
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-800 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitApiKey}
+                    disabled={!tempApiKey.trim()}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors text-sm font-medium"
+                  >
+                    Save Key
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
