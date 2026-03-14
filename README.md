@@ -9,6 +9,7 @@ SeismicSight is an elite Emergency Disaster Guardian application designed to pro
 - **Predictive Disaster Simulation:** Generates realistic aftermath photos based on the current room layout and potential seismic magnitudes, helping visualize the impact of an earthquake. Shows a side-by-side comparison of the original room and the simulated aftermath.
 - **USGS Data Integration:** Fetches live seismic data from the US Geological Survey (USGS) to provide real-time alerts and safety protocols based on recent global events.
 - **Voice Commands:** Control the application hands-free using voice commands. You can ask the AI to scan the room, simulate an earthquake, close the simulation, query the USGS API for specific earthquake data, or stop the live view.
+- **Camera Switching:** Seamlessly switch between front and back cameras on mobile and tablet devices. The app intelligently defaults to the back camera for optimal hazard scanning.
 - **Adjustable Confidence Threshold:** Fine-tune the AI's sensitivity to reduce false positives and focus on the most critical hazards.
 - **Secure API Key Management:** Enter your Gemini API key via a secure, masked modal dialog. The key is obfuscated in the browser's session storage to protect against shoulder-surfing and casual inspection.
 - **Cost-Optimized AI Integration:** Built-in rate limiting (60s for simulation, 30s for scanning) and a reduced 1fps video feed to minimize API token consumption and costs.
