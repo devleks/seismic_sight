@@ -65,7 +65,7 @@ When activated (via the "Simulate" button or voice command), SeismicSight will g
 
 Once the live connection is established, you can use the following voice commands:
 
-- **"Scan the room"**: Initiates a structural hazard scan of the current camera view.
+- **"Scan the room" / "Scan hazards"**: Initiates a structural hazard scan of the current camera view.
 - **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the room after a major earthquake.
 - **"Close simulation"**: Closes the aftermath simulation and returns to the live camera feed.
 - **"Stop live view" / "Disconnect"**: Closes the live connection, turns off the camera and microphone, and returns to the idle state.

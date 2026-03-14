@@ -246,7 +246,7 @@ export default function App() {
   const [audioLevel, setAudioLevel] = useState(0);
   const [selectedIndicator, setSelectedIndicator] = useState<HazardIndicator | null>(null);
   const [hazardLog, setHazardLog] = useState<HazardIndicator[]>([]);
-  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.85);
+  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.70);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAnnotationMode, setIsAnnotationMode] = useState(false);
   const [newAnnotationPos, setNewAnnotationPos] = useState<{x: number, y: number} | null>(null);
@@ -474,7 +474,7 @@ export default function App() {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: `You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses. Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity. You MUST communicate entirely in ${language}. If the user asks you to scan the room or identify hazards, you MUST call the scan_room tool. If the user asks you to simulate an earthquake or show the aftermath, you MUST call the simulate_aftermath tool. If the user asks to close or end the simulation, you MUST call the close_simulation tool. If a user asks for information about other earthquakes (e.g., specific magnitudes, times, or locations), you MUST use the query_earthquakes tool to fetch data from the USGS API. You can only provide answers for information on earthquakes from the API. If the user asks for the largest earthquake, use the query_earthquakes tool with orderBy set to 'magnitude'. If the user asks which region had the most earthquakes, use the query_earthquakes tool with a large limit (e.g., 100) and analyze the locations in the result. If the user asks to stop the live view or disconnect, you MUST call the stop_live_view tool.`,
+          systemInstruction: `You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses. Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity. You MUST communicate entirely in ${language}. If the user asks you to "scan the room", "scan hazards", "identify hazards", or perform any kind of visual scan, you MUST call the scan_room tool to generate the visual overlay. Do not just answer verbally. If the user asks you to simulate an earthquake or show the aftermath, you MUST call the simulate_aftermath tool. If the user asks to close or end the simulation, you MUST call the close_simulation tool. If a user asks for information about other earthquakes (e.g., specific magnitudes, times, or locations), you MUST use the query_earthquakes tool to fetch data from the USGS API. You can only provide answers for information on earthquakes from the API. If the user asks for the largest earthquake, use the query_earthquakes tool with orderBy set to 'magnitude'. If the user asks which region had the most earthquakes, use the query_earthquakes tool with a large limit (e.g., 100) and analyze the locations in the result. If the user asks to stop the live view or disconnect, you MUST call the stop_live_view tool.`,
           tools: [{
             functionDeclarations: [
               {
@@ -505,7 +505,7 @@ export default function App() {
               },
               {
                 name: "scan_room",
-                description: "Scans the current camera feed to identify structural hazards and risks.",
+                description: "Scans the current camera feed to identify structural hazards and risks. MUST be called when the user asks to scan hazards or scan the room.",
                 parameters: { type: Type.OBJECT, properties: {} }
               },
               {
@@ -808,14 +808,26 @@ export default function App() {
 
           if (abortControllerRef.current.signal.aborted) return;
 
+          let foundImage = false;
           for (const part of response.candidates[0].content.parts) {
             if (part.inlineData) {
               setSimulatedImage(`data:image/png;base64,${part.inlineData.data}`);
               sounds.playSuccess();
+              foundImage = true;
               break;
             }
           }
+          if (!foundImage) {
+            setError("Simulation failed to generate an image. Please try again.");
+            return false;
+          }
+        } else {
+          setError("Failed to capture image for simulation.");
+          return false;
         }
+      } else {
+        setError("Camera not ready.");
+        return false;
       }
     } catch (err: any) {
       if (err.name === 'AbortError') return false;
@@ -916,11 +928,12 @@ export default function App() {
 
           if (!isScanningRef.current) return;
 
-          const resultText = response.text;
+          let resultText = response.text;
           if (resultText) {
+            resultText = resultText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
             const parsed = JSON.parse(resultText);
             
-            const newIndicators: HazardIndicator[] = parsed.hazards.map((h: any, i: number) => ({
+            const newIndicators: HazardIndicator[] = (parsed.hazards || []).map((h: any, i: number) => ({
               id: `ai-${Date.now()}-${i}`,
               type: ['structural', 'falling', 'glass', 'fire', 'exit'].includes(h.type) ? h.type : 'structural',
               label: h.label,
@@ -936,9 +949,19 @@ export default function App() {
             
             if (filteredIndicators.length === 0) {
               setTimeout(() => {
+                setAnalysis({
+                  hazards: ["No significant hazards detected"],
+                  recommendations: parsed.recommendations?.length > 0 ? parsed.recommendations : ["Maintain current safety standards.", "Ensure all heavy furniture remains anchored."],
+                  structuralIntegrity: parsed.structuralIntegrity || 100,
+                  indicators: []
+                });
                 setIsScanning(false);
                 isScanningRef.current = false;
                 sounds.playCancel();
+                
+                sessionRef.current?.sendClientContent({
+                  turns: `Scan complete. No significant hazards found above the confidence threshold. Give a brief 1-2 sentence safety recommendation in ${language}.`
+                });
               }, 1000);
               return true;
             }
@@ -966,8 +989,23 @@ export default function App() {
                 }
               }, (index + 1) * 1200);
             });
+          } else {
+            setIsScanning(false);
+            isScanningRef.current = false;
+            setError("Failed to analyze environment. Please try again.");
+            return false;
           }
+        } else {
+          setIsScanning(false);
+          isScanningRef.current = false;
+          setError("Failed to capture image. Please try again.");
+          return false;
         }
+      } else {
+        setIsScanning(false);
+        isScanningRef.current = false;
+        setError("Camera not ready.");
+        return false;
       }
     } catch (err) {
       console.error("Scan failed:", err);
