@@ -26,7 +26,8 @@ import {
   Trash2,
   Crosshair,
   Globe,
-  Power
+  Power,
+  SwitchCamera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Modality, Type } from "@google/genai";
@@ -253,6 +254,7 @@ export default function App() {
   const [language, setLanguage] = useState('English');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [tempApiKey, setTempApiKey] = useState("");
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const t = (key: string) => translations[language]?.[key] || translations['English'][key] || key;
 
   // --- Refs ---
@@ -352,10 +354,10 @@ export default function App() {
   };
 
   // --- Camera Setup ---
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode: "user" | "environment" = "environment") => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 1280, height: 720 }, 
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } }, 
         audio: true 
       });
       if (videoRef.current) {
@@ -368,6 +370,34 @@ export default function App() {
       return null;
     }
   }, []);
+
+  const switchCamera = async () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newMode);
+    
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      
+      if (videoRef.current && videoRef.current.srcObject) {
+        const currentStream = videoRef.current.srcObject as MediaStream;
+        
+        // Stop old video tracks
+        currentStream.getVideoTracks().forEach(track => {
+          track.stop();
+          currentStream.removeTrack(track);
+        });
+        
+        // Add new video tracks
+        newStream.getVideoTracks().forEach(track => {
+          currentStream.addTrack(track);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to switch camera:", err);
+    }
+  };
 
   const toggleVideo = () => {
     const newState = !isVideoOff;
@@ -410,7 +440,7 @@ export default function App() {
     if (status !== AppStatus.IDLE) return;
     
     setStatus(AppStatus.CONNECTING);
-    const stream = await startCamera();
+    const stream = await startCamera(facingMode);
     if (!stream) {
       setStatus(AppStatus.ERROR);
       return;
@@ -1383,6 +1413,13 @@ export default function App() {
                   className={`p-3 rounded-xl transition-colors ${isVideoOff ? 'bg-red-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
                   {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                </button>
+                <button 
+                  onClick={switchCamera}
+                  className="p-3 rounded-xl transition-colors bg-white/10 text-white hover:bg-white/20"
+                  title="Switch Camera"
+                >
+                  <SwitchCamera className="w-5 h-5" />
                 </button>
                 <div className="w-px h-8 bg-white/20 mx-2"></div>
                 <button 
