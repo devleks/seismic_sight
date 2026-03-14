@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **API Key Modal:** Implemented a secure, custom React modal for entering the Gemini API key. This replaces the default browser prompt, masking the input to protect against shoulder-surfing.
-- **Rate Limiting:** Added cooldowns to expensive AI operations to reduce API overuse and costs. The "Simulate" feature now has a 30-second cooldown, and the "Scan" feature has a 15-second cooldown.
+- **Rate Limiting:** Added cooldowns to expensive AI operations to reduce API overuse and costs. The "Simulate" feature now has a 60-second cooldown, and the "Scan" feature has a 30-second cooldown.
 
 ### Changed
 - **Frame Rate Reduction:** Reduced the video frame rate sent to the Live API from 2fps to 1fps. This cuts video token consumption by 50% without significantly impacting the AI's situational awareness.

@@ -11,8 +11,8 @@ You will also need to authenticate with a valid Google Gemini API key to enable 
 ## Rate Limiting and Costs
 
 To help manage API usage and reduce costs, SeismicSight implements rate limiting on its most resource-intensive features:
-- **Hazard Scans:** Limited to one scan every 15 seconds.
-- **Predictive Simulations:** Limited to one simulation every 30 seconds.
+- **Hazard Scans:** Limited to one scan every 30 seconds.
+- **Predictive Simulations:** Limited to one simulation every 60 seconds.
 - **Live Video Feed:** The video frame rate sent to the AI has been optimized to 1 frame per second, significantly reducing video token consumption while maintaining situational awareness.
 
 If you attempt to trigger a scan or simulation before the cooldown expires, an error message will display the remaining time.

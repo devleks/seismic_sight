@@ -270,8 +270,8 @@ export default function App() {
 
   const lastSimulateTimeRef = useRef<number>(0);
   const lastScanTimeRef = useRef<number>(0);
-  const SIMULATE_COOLDOWN_MS = 30000; // 30 seconds
-  const SCAN_COOLDOWN_MS = 15000; // 15 seconds
+  const SIMULATE_COOLDOWN_MS = 60000; // 60 seconds
+  const SCAN_COOLDOWN_MS = 30000; // 30 seconds
 
   // --- API Key Handling ---
   useEffect(() => {
