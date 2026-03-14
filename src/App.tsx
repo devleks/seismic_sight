@@ -273,6 +273,30 @@ export default function App() {
   const SIMULATE_COOLDOWN_MS = 60000; // 60 seconds
   const SCAN_COOLDOWN_MS = 30000; // 30 seconds
 
+  // --- API Key Obfuscation ---
+  const xorKey = "seismic_sight_2026";
+  const obfuscateKey = (key: string) => {
+    let res = "";
+    for (let i = 0; i < key.length; i++) {
+      res += String.fromCharCode(key.charCodeAt(i) ^ xorKey.charCodeAt(i % xorKey.length));
+    }
+    return "enc_" + btoa(res);
+  };
+
+  const deobfuscateKey = (encoded: string) => {
+    if (!encoded || !encoded.startsWith("enc_")) return encoded;
+    try {
+      const raw = atob(encoded.slice(4));
+      let res = "";
+      for (let i = 0; i < raw.length; i++) {
+        res += String.fromCharCode(raw.charCodeAt(i) ^ xorKey.charCodeAt(i % xorKey.length));
+      }
+      return res;
+    } catch (e) {
+      return "";
+    }
+  };
+
   // --- API Key Handling ---
   useEffect(() => {
     const checkKey = async () => {
@@ -281,7 +305,7 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           if (data.apiKey) {
-            sessionStorage.setItem("GEMINI_API_KEY", data.apiKey);
+            sessionStorage.setItem("GEMINI_API_KEY", obfuscateKey(data.apiKey));
             setHasApiKey(true);
             return;
           }
@@ -294,6 +318,10 @@ export default function App() {
         const selected = await window.aistudio.hasSelectedApiKey();
         setHasApiKey(selected);
       } else if (sessionStorage.getItem("GEMINI_API_KEY")) {
+        const stored = sessionStorage.getItem("GEMINI_API_KEY");
+        if (stored && !stored.startsWith("enc_")) {
+           sessionStorage.setItem("GEMINI_API_KEY", obfuscateKey(stored));
+        }
         setHasApiKey(true);
       }
     };
@@ -311,7 +339,7 @@ export default function App() {
 
   const submitApiKey = () => {
     if (tempApiKey.trim()) {
-      sessionStorage.setItem("GEMINI_API_KEY", tempApiKey.trim());
+      sessionStorage.setItem("GEMINI_API_KEY", obfuscateKey(tempApiKey.trim()));
       setHasApiKey(true);
       setShowApiKeyModal(false);
       setTempApiKey("");
@@ -319,7 +347,8 @@ export default function App() {
   };
 
   const getApiKey = () => {
-    return sessionStorage.getItem("GEMINI_API_KEY") || process.env.API_KEY || process.env.GEMINI_API_KEY || "";
+    const stored = sessionStorage.getItem("GEMINI_API_KEY");
+    return (stored ? deobfuscateKey(stored) : "") || process.env.API_KEY || process.env.GEMINI_API_KEY || "";
   };
 
   // --- Camera Setup ---
