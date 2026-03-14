@@ -356,10 +356,21 @@ export default function App() {
   // --- Camera Setup ---
   const startCamera = useCallback(async (mode: "user" | "environment" = "environment") => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } }, 
-        audio: true 
-      });
+      let stream: MediaStream;
+      try {
+        // Try with exact facingMode first (forces back camera on mobile)
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: { exact: mode }, width: { ideal: 1280 }, height: { ideal: 720 } }, 
+          audio: true 
+        });
+      } catch (e) {
+        // Fallback to ideal if exact fails (e.g., on desktop)
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: { ideal: mode }, width: { ideal: 1280 }, height: { ideal: 720 } }, 
+          audio: true 
+        });
+      }
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -376,9 +387,16 @@ export default function App() {
     setFacingMode(newMode);
     
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: newMode, width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      let newStream: MediaStream;
+      try {
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: newMode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+      } catch (e) {
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: newMode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+      }
       
       if (videoRef.current && videoRef.current.srcObject) {
         const currentStream = videoRef.current.srcObject as MediaStream;
