@@ -8,7 +8,7 @@ export interface SeismicData {
 
 export interface HazardIndicator {
   id: string;
-  type: 'structural' | 'fire' | 'glass' | 'falling' | 'exit';
+  type: string;
   label: string;
   details: string;
   x: number; // percentage 0-100

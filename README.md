@@ -4,11 +4,11 @@ SeismicSight is an elite Emergency Disaster Guardian application designed to pro
 
 ## Features
 
-- **Real-Time Hazard Detection:** Continuously analyzes your camera feed to identify structural and environmental risks, such as unanchored furniture, exposed gas lines, and large glass panes.
+- **Real-Time Hazard Detection:** Continuously analyzes your camera feed to identify any potential safety, structural, or environmental risks, such as unanchored furniture, tripping hazards, electrical issues, and blocked exits. The AI freely determines and categorizes hazards without being restricted to a predefined list.
 - **Live Hazard Feed:** Displays a chronological log of detected hazards with confidence scores, allowing you to monitor risks as they are identified.
-- **Predictive Disaster Simulation:** Generates realistic aftermath photos based on the current room layout and potential seismic magnitudes, helping visualize the impact of an earthquake. Shows a side-by-side comparison of the original room and the simulated aftermath.
+- **Predictive Disaster Simulation:** Generates realistic aftermath photos based on the current environment layout and potential seismic magnitudes, helping visualize the impact of an earthquake. Shows a side-by-side comparison of the original environment and the simulated aftermath.
 - **USGS Data Integration:** Fetches live seismic data from the US Geological Survey (USGS) to provide real-time alerts and safety protocols based on recent global events.
-- **Voice Commands:** Control the application hands-free using voice commands. You can ask the AI to scan the room, simulate an earthquake, close the simulation, query the USGS API for specific earthquake data, or stop the live view.
+- **Voice Commands:** Control the application hands-free using voice commands. You can ask the AI to scan the area, simulate an earthquake, close the simulation, query the USGS API for specific earthquake data, or stop the live view.
 - **Camera Switching:** Seamlessly switch between front and back cameras on mobile and tablet devices. The app intelligently defaults to the back camera for optimal hazard scanning.
 - **Adjustable Confidence Threshold:** Fine-tune the AI's sensitivity to reduce false positives and focus on the most critical hazards.
 - **Secure API Key Management:** Enter your Gemini API key via a secure, masked modal dialog. The key is obfuscated in the browser's session storage to protect against shoulder-surfing and casual inspection.
@@ -41,8 +41,8 @@ For detailed instructions on how to use the application, please refer to the [Us
 
 Once the live connection is established, you can use the following voice commands:
 
-- **"Scan the room" / "Scan hazards"**: Initiates a structural hazard scan of the current camera view.
-- **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the room after a major earthquake.
+- **"Scan the area" / "Scan hazards"**: Initiates a structural hazard scan of the current camera view.
+- **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the environment after a major earthquake.
 - **"Close simulation"**: Closes the aftermath simulation and returns to the live camera feed.
 - **"Stop live view" / "Disconnect"**: Closes the live connection, turns off the camera and microphone, and returns to the idle state.
 - **Query Earthquakes**: Ask questions like "Where were there earthquakes below magnitude 5 today?" or "Were there any earthquakes above magnitude 7 last week?" to fetch specific data from the USGS API.

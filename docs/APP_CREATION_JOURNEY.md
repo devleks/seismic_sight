@@ -14,8 +14,8 @@ This document provides a high-level overview of the architectural and feature mi
 - **Empirical Data:** Integrated the USGS Earthquake Hazards Program API for live seismic data.
 
 ### Phase 2: Voice & Simulation (v1.1.0)
-- **Voice Commands:** Added hands-free control ("Scan the room", "Simulate an earthquake").
-- **Predictive Simulation:** Implemented a side-by-side UI comparing the original room to the AI-generated disaster aftermath.
+- **Voice Commands:** Added hands-free control ("Scan the area", "Simulate an earthquake").
+- **Predictive Simulation:** Implemented a side-by-side UI comparing the original environment to the AI-generated disaster aftermath.
 
 ### Phase 3: Deployment Prep (v1.2.0)
 - **Cloud Run Readiness:** Configured backend environment variables (`/api/config`) for secure API key injection during deployment.

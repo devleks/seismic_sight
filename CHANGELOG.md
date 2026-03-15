@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.1] - 2026-03-14
 
 ### Fixed
-- **Voice Command Reliability:** Updated the system instructions and tool descriptions to ensure the AI reliably calls the `scan_room` tool when the user asks to "scan hazards" or "scan the room" via voice command, rather than just answering verbally.
+- **Voice Command Reliability:** Updated the system instructions and tool descriptions to ensure the AI reliably calls the `scan_environment` tool when the user asks to "scan hazards" or "scan the area" via voice command, rather than just answering verbally.
 
 ### Added
 - **Documentation Update:** Added the "Seismic App creaation Journey" diagram to the README.
@@ -53,10 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-03-09
 
 ### Added
-- **Voice Commands:** Added ability to control the application hands-free. Supported commands include scanning the room, simulating an earthquake, closing the simulation, and stopping the live view.
+- **Voice Commands:** Added ability to control the application hands-free. Supported commands include scanning the area, simulating an earthquake, closing the simulation, and stopping the live view.
 - **USGS API Querying:** The voice assistant can now answer complex questions about historical earthquake data (e.g., largest magnitude in the last 90 days, regions with the most earthquakes) by querying the USGS API.
 - **Disconnect Button:** Added a prominent red power button to the camera controls overlay to easily stop the live view and end the session.
-- **Side-by-Side Simulation:** The predictive disaster simulation now displays a side-by-side comparison of the original room and the simulated aftermath.
+- **Side-by-Side Simulation:** The predictive disaster simulation now displays a side-by-side comparison of the original environment and the simulated aftermath.
 
 ### Changed
 - Updated `queryEarthquakesApi` to support `orderBy` and higher limits (up to 500) for more advanced data analysis.
@@ -67,6 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Real-time structural hazard detection using camera feed.
 - Live hazard feed with confidence scores.
-- Predictive disaster simulation based on current room layout.
+- Predictive disaster simulation based on current environment layout.
 - Integration with USGS Earthquake Hazards Program API for live seismic data.
 - Adjustable confidence threshold for hazard detection.

@@ -48,7 +48,7 @@ This panel is your primary tool for understanding local risks.
 
 ## Performing a Hazard Scan
 
-1. Point your camera at the area you want to analyze (e.g., a room with heavy furniture, windows, or structural elements).
+1. Point your camera at the area you want to analyze (e.g., an environment with heavy furniture, windows, structural elements, or outdoor hazards like trees and power lines).
 2. Adjust the **Confidence** slider if you want to filter out low-probability risks.
 3. Click the red **Scan** button.
 4. The system will pulse "ANALYZING..." and begin populating the **Live Hazard Feed** with identified risks.
@@ -57,7 +57,7 @@ This panel is your primary tool for understanding local risks.
 
 ## Predictive Disaster Simulation
 
-When activated (via the "Simulate" button or voice command), SeismicSight will generate a simulated image of your current environment showing the potential aftermath of a seismic event. It displays a side-by-side comparison of the original room and the simulated aftermath.
+When activated (via the "Simulate" button or voice command), SeismicSight will generate a simulated image of your current environment showing the potential aftermath of a seismic event. It displays a side-by-side comparison of the original environment and the simulated aftermath.
 
 **Always remember:** These images are predictive simulations for preparedness training, not real-time events.
 
@@ -65,8 +65,8 @@ When activated (via the "Simulate" button or voice command), SeismicSight will g
 
 Once the live connection is established, you can use the following voice commands:
 
-- **"Scan the room" / "Scan hazards"**: Initiates a structural hazard scan of the current camera view.
-- **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the room after a major earthquake.
+- **"Scan the area" / "Scan the environment" / "Scan hazards"**: Initiates a structural hazard scan of the current camera view.
+- **"Simulate an earthquake"**: Generates a side-by-side visual simulation of the environment after a major earthquake.
 - **"Close simulation"**: Closes the aftermath simulation and returns to the live camera feed.
 - **"Stop live view" / "Disconnect"**: Closes the live connection, turns off the camera and microphone, and returns to the idle state.
 - **Query Earthquakes**: Ask questions like "Where were there earthquakes below magnitude 5 today?" or "Were there any earthquakes above magnitude 7 last week?" to fetch specific data from the USGS API.

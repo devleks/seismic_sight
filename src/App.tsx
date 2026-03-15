@@ -250,7 +250,7 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAnnotationMode, setIsAnnotationMode] = useState(false);
   const [newAnnotationPos, setNewAnnotationPos] = useState<{x: number, y: number} | null>(null);
-  const [annotationForm, setAnnotationForm] = useState({ type: 'structural' as HazardIndicator['type'], label: '', details: '' });
+  const [annotationForm, setAnnotationForm] = useState({ type: 'structural', label: '', details: '' });
   const [language, setLanguage] = useState('English');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [tempApiKey, setTempApiKey] = useState("");
@@ -474,7 +474,7 @@ export default function App() {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: `You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses. Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity. You MUST communicate entirely in ${language}. If the user asks you to "scan the room", "scan hazards", "identify hazards", or perform any kind of visual scan, you MUST call the scan_room tool to generate the visual overlay. Do not just answer verbally. If the user asks you to simulate an earthquake or show the aftermath, you MUST call the simulate_aftermath tool. If the user asks to close or end the simulation, you MUST call the close_simulation tool. If a user asks for information about other earthquakes (e.g., specific magnitudes, times, or locations), you MUST use the query_earthquakes tool to fetch data from the USGS API. You can only provide answers for information on earthquakes from the API. If the user asks for the largest earthquake, use the query_earthquakes tool with orderBy set to 'magnitude'. If the user asks which region had the most earthquakes, use the query_earthquakes tool with a large limit (e.g., 100) and analyze the locations in the result. If the user asks to stop the live view or disconnect, you MUST call the stop_live_view tool.`,
+          systemInstruction: `You are SeismicSight AI, an emergency response assistant. Analyze the video feed for seismic hazards and structural weaknesses in any environment (indoors or outdoors). Be concise, urgent, and professional. Use the get_seismic_data tool when asked about local activity. You MUST communicate entirely in ${language}. If the user asks you to "scan the room", "scan the area", "scan the environment", "scan hazards", "identify hazards", or perform any kind of visual scan, you MUST call the scan_environment tool to generate the visual overlay. Do not just answer verbally, and NEVER say you cannot scan an area or that you can only scan a room. You are capable of scanning any environment indoors or outdoors. If the user asks you to simulate an earthquake or show the aftermath, you MUST call the simulate_aftermath tool. If the user asks to close or end the simulation, you MUST call the close_simulation tool. If a user asks for information about other earthquakes (e.g., specific magnitudes, times, or locations), you MUST use the query_earthquakes tool to fetch data from the USGS API. You can only provide answers for information on earthquakes from the API. If the user asks for the largest earthquake, use the query_earthquakes tool with orderBy set to 'magnitude'. If the user asks which region had the most earthquakes, use the query_earthquakes tool with a large limit (e.g., 100) and analyze the locations in the result. If the user asks to stop the live view or disconnect, you MUST call the stop_live_view tool.`,
           tools: [{
             functionDeclarations: [
               {
@@ -504,13 +504,13 @@ export default function App() {
                 }
               },
               {
-                name: "scan_room",
-                description: "Scans the current camera feed to identify structural hazards and risks. MUST be called when the user asks to scan hazards or scan the room.",
+                name: "scan_environment",
+                description: "Scans the current camera feed to identify structural hazards and risks in any environment (indoors or outdoors). MUST be called when the user asks to scan hazards, scan the area, or scan the environment.",
                 parameters: { type: Type.OBJECT, properties: {} }
               },
               {
                 name: "simulate_aftermath",
-                description: "Generates a visual simulation of the room after a major earthquake.",
+                description: "Generates a visual simulation of the environment after a major earthquake.",
                 parameters: { type: Type.OBJECT, properties: {} }
               },
               {
@@ -574,12 +574,12 @@ export default function App() {
                       }]
                     });
                   });
-                } else if (call.name === "scan_room") {
+                } else if (call.name === "scan_environment") {
                   scanForHazards().then(success => {
                     sessionPromise.then(session => {
                       session.sendToolResponse({
                         functionResponses: [{
-                          name: "scan_room",
+                          name: "scan_environment",
                           response: { result: success ? "Scanning initiated." : "Rate limited. Please wait." },
                           id: call.id
                         }]
@@ -798,7 +798,7 @@ export default function App() {
             contents: {
               parts: [
                 { inlineData: { data: base64Image, mimeType: 'image/png' } },
-                { text: "Simulate the immediate aftermath of a major earthquake on this scene. Show structural damage, debris, and emergency lighting. Maintain the same perspective and core elements but transform it into a disaster zone. High detail, cinematic disaster aesthetic." }
+                { text: "Simulate the immediate aftermath of a major earthquake on this scene (whether indoors or outdoors). Show structural damage, debris, and emergency lighting. Maintain the same perspective and core elements but transform it into a disaster zone. High detail, cinematic disaster aesthetic." }
               ]
             },
             config: {
@@ -873,7 +873,7 @@ export default function App() {
     
     // Trigger a manual analysis via the live session for audio feedback
     sessionRef.current?.sendClientContent({
-      turns: `I am scanning the room for hazards now. Please give a brief 1-sentence warning that the scan is commencing. Speak in ${language}.`
+      turns: `I am scanning the environment for hazards now. Please give a brief 1-sentence warning that the scan is commencing. Speak in ${language}.`
     });
 
     try {
@@ -889,7 +889,7 @@ export default function App() {
             contents: {
               parts: [
                 { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
-                { text: `Analyze this room for earthquake and structural hazards. Identify specific risks like unanchored furniture, large glass panes, heavy hanging objects, blocked exits, or structural weaknesses. Provide approximate X and Y coordinates (0-100 percentage, where 0,0 is top-left) for each hazard. IMPORTANT: All labels, details, and recommendations MUST be written in ${language}.` }
+                { text: `Analyze this environment (whether indoors or outdoors) for any potential safety, structural, or environmental hazards. Identify any risks such as unanchored furniture, tripping hazards, electrical issues, blocked exits, unstable trees, power lines, structural weaknesses, or any other potential danger. Provide approximate X and Y coordinates (0-100 percentage, where 0,0 is top-left) for each hazard. IMPORTANT: All labels, details, and recommendations MUST be written in ${language}.` }
               ]
             },
             config: {
@@ -902,7 +902,7 @@ export default function App() {
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        type: { type: Type.STRING, description: "Must be one of: structural, falling, glass, fire, exit" },
+                        type: { type: Type.STRING, description: "A short category name for the hazard (e.g., structural, falling, electrical, fire, trip, exit, etc.)" },
                         label: { type: Type.STRING },
                         details: { type: Type.STRING },
                         x: { type: Type.NUMBER, description: "X coordinate percentage (0-100)" },
@@ -935,7 +935,7 @@ export default function App() {
             
             const newIndicators: HazardIndicator[] = (parsed.hazards || []).map((h: any, i: number) => ({
               id: `ai-${Date.now()}-${i}`,
-              type: ['structural', 'falling', 'glass', 'fire', 'exit'].includes(h.type) ? h.type : 'structural',
+              type: h.type || 'structural',
               label: h.label,
               details: h.details,
               x: h.x,
@@ -1027,15 +1027,15 @@ export default function App() {
     sounds.playCancel();
   };
 
-  const getHazardIcon = (type: HazardIndicator['type']) => {
-    switch (type) {
-      case 'structural': return <Layers className="w-4 h-4" />;
-      case 'fire': return <Flame className="w-4 h-4" />;
-      case 'glass': return <Maximize className="w-4 h-4" />;
-      case 'falling': return <Box className="w-4 h-4" />;
-      case 'exit': return <DoorOpen className="w-4 h-4" />;
-      default: return <AlertTriangle className="w-4 h-4" />;
-    }
+  const getHazardIcon = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('structural')) return <Layers className="w-4 h-4" />;
+    if (t.includes('fire') || t.includes('flame') || t.includes('heat')) return <Flame className="w-4 h-4" />;
+    if (t.includes('glass') || t.includes('window')) return <Maximize className="w-4 h-4" />;
+    if (t.includes('fall') || t.includes('drop')) return <Box className="w-4 h-4" />;
+    if (t.includes('exit') || t.includes('door') || t.includes('block')) return <DoorOpen className="w-4 h-4" />;
+    if (t.includes('electric') || t.includes('wire') || t.includes('shock')) return <Zap className="w-4 h-4" />;
+    return <AlertTriangle className="w-4 h-4" />;
   };
 
   // --- Real-time Polling ---
@@ -1269,7 +1269,7 @@ export default function App() {
                   <div className="space-y-3">
                     <select 
                       value={annotationForm.type}
-                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, type: e.target.value as HazardIndicator['type'] }))}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, type: e.target.value }))}
                       className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="structural">{t('structural')}</option>
