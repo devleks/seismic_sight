@@ -9,6 +9,7 @@ SeismicSight is an elite Emergency Disaster Guardian application designed to pro
 - **Predictive Disaster Simulation:** Generates realistic aftermath photos based on the current environment layout and potential seismic magnitudes, helping visualize the impact of an earthquake. Shows a side-by-side comparison of the original environment and the simulated aftermath.
 - **USGS Data Integration:** Fetches live seismic data from the US Geological Survey (USGS) to provide real-time alerts and safety protocols based on recent global events.
 - **Voice Commands:** Control the application hands-free using voice commands. You can ask the AI to scan the area, simulate an earthquake, close the simulation, query the USGS API for specific earthquake data, or stop the live view.
+- **Responsive Design:** Fully optimized layout for mobile (360x800px), tablet (768x1024px), and desktop screens, ensuring a seamless experience across all devices.
 - **Camera Switching:** Seamlessly switch between front and back cameras on mobile and tablet devices. The app intelligently defaults to the back camera for optimal hazard scanning.
 - **Adjustable Confidence Threshold:** Fine-tune the AI's sensitivity to reduce false positives and focus on the most critical hazards.
 - **Secure API Key Management:** Enter your Gemini API key via a secure, masked modal dialog. The key is obfuscated in the browser's session storage to protect against shoulder-surfing and casual inspection.
@@ -46,6 +47,41 @@ Once the live connection is established, you can use the following voice command
 - **"Close simulation"**: Closes the aftermath simulation and returns to the live camera feed.
 - **"Stop live view" / "Disconnect"**: Closes the live connection, turns off the camera and microphone, and returns to the idle state.
 - **Query Earthquakes**: Ask questions like "Where were there earthquakes below magnitude 5 today?" or "Were there any earthquakes above magnitude 7 last week?" to fetch specific data from the USGS API.
+
+## Reproducible Testing Instructions for Judges
+
+To thoroughly evaluate SeismicSight's multimodal capabilities, please follow these steps:
+
+### Prerequisites
+1. A device with a working camera and microphone (laptop, tablet, or mobile phone).
+2. A modern web browser (Chrome recommended).
+
+### Step 1: Initialization
+1. Open the provided App URL.
+2. If prompted, grant the browser permission to access your camera and microphone.
+3. If the app requests a Gemini API key, enter a valid key (the key is securely stored in your session storage and never sent to our servers).
+4. Click the **"Connect"** (or microphone) button to establish the WebRTC connection with the Gemini Live API.
+
+### Step 2: Test Conversational AI & USGS Grounding
+1. Once connected, say: *"Hello, what can you do?"* to verify the audio pipeline.
+2. Test the USGS API integration by asking: *"Were there any earthquakes above magnitude 5 today?"* or *"Where was the largest earthquake this week?"*
+3. **Expected Result:** The AI will verbally answer your question, and the left panel will update with the live seismic data fetched from the USGS API.
+
+### Step 3: Test Real-Time Hazard Detection
+1. Point your camera at your current environment (e.g., a room with furniture, or outdoors towards trees/structures).
+2. Say: *"Scan the area"* or *"Scan the environment"*.
+3. **Expected Result:** The AI will acknowledge the command verbally. The right panel ("Live Hazard Feed") will populate with a JSON-structured list of identified risks (e.g., unanchored furniture, tripping hazards) along with confidence scores and mitigation strategies.
+
+### Step 4: Test Predictive Disaster Simulation
+1. Keep your camera pointed at the scene.
+2. Say: *"Simulate an earthquake"*.
+3. **Expected Result:** The screen will transition to a side-by-side view. The left side shows your original camera feed, and the right side will display a highly realistic, AI-generated aftermath photo of your exact environment post-earthquake (generated via Gemini 3.1 Flash Image Preview).
+4. Say: *"Close simulation"* to return to the live feed.
+
+### Step 5: Disconnect
+1. Say: *"Stop live view"* or click the red disconnect button to end the session.
+
+---
 
 ## Configuration
 

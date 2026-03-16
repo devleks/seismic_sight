@@ -5,3 +5,4 @@ node_modules/
 dist/
 .env
 Dockerfile_to_delete
+DEVELOPER_SCORCARD.md

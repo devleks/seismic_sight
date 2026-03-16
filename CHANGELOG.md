@@ -5,13 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-15
+
+### Added
+- **Responsive Design:** Completely optimized the application layout for Mobile (360x800px) and Tablet (768x1024px) screens.
+- **Flexible Grid:** Transitioned from a rigid grid to a flexible column layout on smaller screens, ensuring the camera feed and analysis panels are easily accessible via scrolling.
+- **Mobile-Optimized Controls:** Scaled down action buttons and icons for mobile devices to fit perfectly side-by-side without text wrapping.
+
 ## [1.5.1] - 2026-03-14
 
 ### Fixed
 - **Voice Command Reliability:** Updated the system instructions and tool descriptions to ensure the AI reliably calls the `scan_environment` tool when the user asks to "scan hazards" or "scan the area" via voice command, rather than just answering verbally.
 
 ### Added
-- **Documentation Update:** Added the "Seismic App creaation Journey" diagram to the README.
+- **Documentation Update:** Added the "Seismic App creation Journey" diagram to the README.
 
 ## [1.5.0] - 2026-03-14
 

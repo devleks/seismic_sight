@@ -22,7 +22,7 @@ If you attempt to trigger a scan or simulation before the cooldown expires, an e
 The SeismicSight dashboard is divided into several key areas:
 
 ### 1. Camera Feed & Controls
-- **Live View:** The main central area displays your active camera feed. This is the environment the AI will analyze. On mobile and tablet devices, the app defaults to the back camera.
+- **Live View:** The main central area displays your active camera feed. This is the environment the AI will analyze. On mobile and tablet devices, the app defaults to the back camera and the layout adapts to a scrollable column view so you can easily access the analysis panels below.
 - **Controls (Bottom Center):**
   - **Mic Toggle:** Mute or unmute your microphone for voice commands.
   - **Video Toggle:** Turn your camera feed on or off.

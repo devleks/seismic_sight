@@ -1131,7 +1131,7 @@ export default function App() {
                 </button>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-red-950/50 border border-red-500/30 rounded-full">
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t('liveAnalysis')}</span>
+                  <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider hidden sm:inline">{t('liveAnalysis')}</span>
                 </div>
               </>
             )}
@@ -1147,9 +1147,9 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-80px)]">
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:h-[calc(100vh-80px)]">
         {/* Left Panel: Camera Feed */}
-        <section className="relative flex flex-col gap-4">
+        <section className="relative flex flex-col gap-4 h-[50vh] min-h-[400px] lg:h-auto lg:flex-1">
           <div 
             className={`relative flex-1 bg-black rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl group ${isAnnotationMode ? 'cursor-crosshair' : ''}`}
             onClick={(e) => {
@@ -1490,22 +1490,22 @@ export default function App() {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {isScanning || analysis ? (
               <button 
                 onClick={stopScan}
-                className="flex items-center justify-center gap-2 py-4 bg-neutral-900 hover:bg-neutral-800 border border-red-900/50 text-red-500 rounded-xl font-bold text-sm transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 bg-neutral-900 hover:bg-neutral-800 border border-red-900/50 text-red-500 rounded-xl font-bold text-xs sm:text-sm transition-all"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
                 {t('clear')}
               </button>
             ) : (
               <button 
                 disabled={status !== AppStatus.ACTIVE}
                 onClick={scanForHazards}
-                className="flex items-center justify-center gap-2 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Camera className="w-4 h-4 text-red-500" />
+                <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                 {t('scan')}
               </button>
             )}
@@ -1516,31 +1516,31 @@ export default function App() {
                 setIsAnnotationMode(!isAnnotationMode);
                 setNewAnnotationPos(null);
               }}
-              className={`flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                 isAnnotationMode 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20' 
                   : 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300'
               }`}
             >
-              <Crosshair className={`w-4 h-4 ${isAnnotationMode ? 'text-white' : 'text-blue-500'}`} />
+              <Crosshair className={`w-3 h-3 sm:w-4 sm:h-4 ${isAnnotationMode ? 'text-white' : 'text-blue-500'}`} />
               {t('annotate')}
             </button>
 
             {status === AppStatus.SIMULATING ? (
               <button 
                 onClick={cancelSimulation}
-                className="flex items-center justify-center gap-2 py-4 bg-red-950/50 border border-red-500/50 text-red-500 rounded-xl font-bold text-sm transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 bg-red-950/50 border border-red-500/50 text-red-500 rounded-xl font-bold text-xs sm:text-sm transition-all"
               >
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                 {t('cancel')}
               </button>
             ) : (
               <button 
                 disabled={status !== AppStatus.ACTIVE}
                 onClick={simulateAftermath}
-                className="flex items-center justify-center gap-2 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Zap className="w-4 h-4 fill-current" />
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
                 {t('simulate')}
               </button>
             )}
@@ -1548,7 +1548,7 @@ export default function App() {
         </section>
 
         {/* Right Panel: Safety Analysis */}
-        <section className="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+        <section className="flex flex-col gap-6 lg:overflow-y-auto pr-2 custom-scrollbar">
           {/* Seismic Activity Card */}
           <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 blur-[60px] rounded-full pointer-events-none" />
