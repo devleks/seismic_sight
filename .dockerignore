@@ -5,3 +5,4 @@ dist
 .DS_Store
 Dockerfile
 Dockerfile_to_delete
+docs/DEVELOPER_SCORCARD.md

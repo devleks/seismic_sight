@@ -254,6 +254,7 @@ export default function App() {
   const [language, setLanguage] = useState('English');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [tempApiKey, setTempApiKey] = useState("");
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const t = (key: string) => translations[language]?.[key] || translations['English'][key] || key;
 
@@ -330,10 +331,12 @@ export default function App() {
     checkKey();
   }, []);
 
-  const handleOpenKeySelector = async () => {
+  const handleOpenKeySelector = async (action?: () => void) => {
+    if (action && typeof action === 'function') setPendingAction(() => action);
     if (window.aistudio?.openSelectKey) {
       await window.aistudio.openSelectKey();
       setHasApiKey(true);
+      if (action && typeof action === 'function') action();
     } else {
       setShowApiKeyModal(true);
     }
@@ -345,6 +348,10 @@ export default function App() {
       setHasApiKey(true);
       setShowApiKeyModal(false);
       setTempApiKey("");
+      if (pendingAction && typeof pendingAction === 'function') {
+        pendingAction();
+        setPendingAction(null);
+      }
     }
   };
 
@@ -457,6 +464,11 @@ export default function App() {
   const connectLive = async () => {
     if (status !== AppStatus.IDLE) return;
     
+    if (!hasApiKey) {
+      handleOpenKeySelector(connectLive);
+      return;
+    }
+
     setStatus(AppStatus.CONNECTING);
     const stream = await startCamera(facingMode);
     if (!stream) {
@@ -765,7 +777,7 @@ export default function App() {
   // --- Simulation Logic ---
   const simulateAftermath = async (): Promise<boolean> => {
     if (!hasApiKey) {
-      handleOpenKeySelector();
+      handleOpenKeySelector(simulateAftermath);
       return false;
     }
     
@@ -853,7 +865,7 @@ export default function App() {
 
   const scanForHazards = async (): Promise<boolean> => {
     if (!hasApiKey) {
-      handleOpenKeySelector();
+      handleOpenKeySelector(scanForHazards);
       return false;
     }
 
@@ -1137,7 +1149,7 @@ export default function App() {
             )}
             {!hasApiKey && (
               <button 
-                onClick={handleOpenKeySelector}
+                onClick={() => handleOpenKeySelector()}
                 className="text-[10px] font-bold uppercase tracking-widest text-yellow-500 hover:text-yellow-400 flex items-center gap-1 transition-colors"
               >
                 <Zap className="w-3 h-3" /> {t('setApiKey')}
@@ -1905,6 +1917,7 @@ export default function App() {
                     onClick={() => {
                       setShowApiKeyModal(false);
                       setTempApiKey("");
+                      setPendingAction(null);
                     }}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-800 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors text-sm font-medium"
                   >
