@@ -28,3 +28,7 @@ This document provides a high-level overview of the architectural and feature mi
 ### Phase 5: Mobile UX Polish (v1.5.0)
 - **Camera Optimization:** Implemented device-specific logic to automatically default to the back (environment) camera on mobile and tablet devices.
 - **Camera Switching:** Added a seamless UI toggle for switching between front and back cameras.
+
+### Phase 6: API Key UX & Stability Polish (v1.7.0)
+- **Environment Stability:** Fixed a critical Vite environment variable bug that caused silent crashes when the API key was missing from the `.env` file.
+- **Frictionless Onboarding:** Implemented a "Pending Action" state. The app now remembers the user's intended action (Connect, Scan, Simulate) before prompting for an API key, and automatically executes it once the key is saved.

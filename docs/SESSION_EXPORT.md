@@ -103,6 +103,20 @@
 - Appended the recent interactions to `SESSION_EXPORT.md`.
 - Added "Phase 5: Hackathon Polish & Responsive Design" to `LESSONS_LEARNT_REPORT.md` to document the final mile of development.
 
+## Interaction 18: API Key UX & Stability Polish
+**User Prompt:** *(Implicitly directed via bug fixing in previous turn)*
+**AI Action:** 
+- Fixed `vite.config.ts` to safely handle undefined environment variables, preventing a silent crash when `.env` keys are missing.
+- Updated `App.tsx` to include a `pendingAction` state, allowing the app to automatically execute the user's intended action (Connect, Scan, Simulate) immediately after they save their API key.
+
+## Interaction 19: Comprehensive Documentation Update
+**User Prompt:** "Update documentation, including Developer_Scorecard, APP_Creation_JOurney, Lessons_learnt_report, Session_EXport"
+**AI Action:** 
+- Updated `APP_CREATION_JOURNEY.md` to include Phase 6 (API Key UX & Stability Polish).
+- Updated `DEVELOPER_SCORECARD.md` to reflect the recent UX improvements and framework debugging.
+- Updated `LESSONS_LEARNT_REPORT.md` to include Phase 6 in the Chronological Deep Dive.
+- Updated `SESSION_EXPORT.md` to log these recent interactions and the v1.7.0 prompt.
+
 ---
 
 # Appendix: The Architectural Prompt Log
@@ -152,6 +166,9 @@ Based on the codebase forensics (`CHANGELOG.md`, `ARCHITECTURE.md`), these are t
 
 **v1.6.0 (Responsive Layout & Hackathon Polish)**
 * *"Update the Mobile and Tablet the screen layout optimized with the below device screen sizes: mobile: 360 x 800px Tablet: 768 x 1024px"*
+
+**v1.7.0 (API Key UX & Stability Polish)**
+* *(Implicitly directed via bug fixing)*: *"Fix the process.env.API_KEY reference error in vite.config.ts. Also, update the API Key modal so that if a user clicks Connect, Scan, or Simulate without a key, it remembers their action and automatically executes it after they save the key."*
 
 **Documentation & Licensing (The Boilerplate)**
 * *"Add an APACHE 2.0 License to this project. Also, update the README.md to include a 'Disclaimer of Liability' specifically to ensure users know the simulations are for educational purposes only and not real-time events."*

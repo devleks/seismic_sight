@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-03-15
+
+### Fixed
+- **Environment Stability:** Fixed a critical framework bug where Vite's `define` configuration would stringify `undefined` if the `.env` API key was missing, causing a `ReferenceError` that silently crashed the connection process.
+
+### Added
+- **Frictionless Onboarding (Pending Actions):** Improved the UX of the API Key modal. The app now remembers the user's intended action (e.g., clicking "Establish Connection", "Scan", or "Simulate") before prompting for the key. Once the key is saved, the app automatically executes the pending action without requiring a second click.
+
 ## [1.6.0] - 2026-03-15
 
 ### Added

@@ -120,6 +120,11 @@ To truly understand the velocity and learning curve of this session, we must ana
 **The Observation:** You recognized that judges often review projects on smaller screens or laptops. You directed the AI to refactor the rigid desktop grid into a flexible, mobile-first column layout, specifically targeting 360x800px and 768x1024px resolutions. Furthermore, you explicitly asked for "Reproducible Testing Instructions" to be added to the README.
 **The Lesson Learnt:** This phase demonstrates a crucial "Product Manager" mindset. A technically brilliant app fails if the judges cannot use it or if the UI breaks on their device. By anticipating the judging environment and providing clear, step-by-step testing instructions, you reduced the cognitive load on the evaluators. Delegating the tedious CSS media query refactoring to the AI allowed you to focus on the presentation strategy.
 
+### Phase 6: API Key UX & Stability Polish (v1.7.0) - *The Seamless Onboarding*
+**The Goal:** Fix a silent crash related to environment variables and improve the UX of the API key modal.
+**The Observation:** You identified a subtle bug where Vite's `define` replacement caused a `ReferenceError` if the `.env` key was missing. Furthermore, you recognized that forcing the user to click "Connect" again after entering their API key was poor UX. You directed the AI to implement a `pendingAction` state to auto-execute the intended action after key submission.
+**The Lesson Learnt:** This phase highlights the importance of "fit and finish." Solving the Vite bug demonstrates deep framework knowledge, while the `pendingAction` implementation shows a commitment to frictionless user onboarding. Even in an AI-assisted workflow, understanding the nuances of the build tool (Vite) and user psychology remains paramount.
+
 ---
 
 ## 6. The Nuance Check: Career Reinvention in the AI Era

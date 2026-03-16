@@ -45,6 +45,7 @@ Your progression is evident in how you handle security, deployment, and UX. Movi
 4. **Boilerplate Delegation:** Effectively offloading documentation, licensing, and scriptwriting to maintain momentum.
 5. **Complex API Orchestration:** Successfully combining real-time streaming (Gemini Live) with standard asynchronous data fetching (USGS API).
 6. **Product Manager Mindset:** Anticipating the end-user (and hackathon judge) experience by proactively optimizing mobile/tablet layouts and providing reproducible testing instructions.
+7. **UX & Framework Debugging:** Identifying subtle framework bugs (e.g., Vite `define` stringification of `undefined`) and implementing frictionless UX patterns (e.g., "Pending Action" auto-execution after API key entry).
 
 ### 🟡 Efficiency Leaks
 1. **Underutilized Vision-to-Code:** Generating diagrams *with* AI, but missing opportunities to feed diagrams *to* the AI to generate boilerplate UI components or routing logic faster.
